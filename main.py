@@ -207,17 +207,22 @@ def main():
 
 
 def train(train_loader, model, criterion, optimizer, epoch, normalizer):
-    batch_time = AverageMeter()
-    data_time = AverageMeter()
-    losses = AverageMeter()
-    if args.task == 'regression':
-        mae_errors = AverageMeter()
-    else:
-        accuracies = AverageMeter()
-        precisions = AverageMeter()
-        recalls = AverageMeter()
-        fscores = AverageMeter()
-        auc_scores = AverageMeter()
+    scores = {}
+    for t in range(len(tasks)):
+      task_id = f'task_{t}'
+      dict_task = {}
+      dict_task['batch_time'] = AverageMeter()
+      dict_task['data_time'] = AverageMeter()
+      dict_task['losses'] = AverageMeter()
+      if args.task == 'regression':
+          dict_task['mae_errors = AverageMeter()
+      else:
+          dict_task['accuracies'] = AverageMeter()
+          dict_task['precisions'] = AverageMeter()
+          dict_task['recalls'] = AverageMeter()
+          dict_task['fscores'] = AverageMeter()
+          dict_task['auc_scores'] = AverageMeter()
+      scores[task_id] = dict_task
 
     # switch to train mode
     model.train()
@@ -303,16 +308,32 @@ def train(train_loader, model, criterion, optimizer, epoch, normalizer):
 
 
 def validate(val_loader, model, criterion, normalizer, test=False):
-    batch_time = AverageMeter()
-    losses = AverageMeter()
-    if args.task == 'regression':
-        mae_errors = AverageMeter()
-    else:
-        accuracies = AverageMeter()
-        precisions = AverageMeter()
-        recalls = AverageMeter()
-        fscores = AverageMeter()
-        auc_scores = AverageMeter()
+    scores = {}
+      for t in range(len(tasks)):
+        task_id = f'task_{t}'
+        dict_task = {}
+        dict_task['batch_time'] = AverageMeter()
+        # dict_task['data_time'] = AverageMeter()
+        dict_task['losses'] = AverageMeter()
+        if args.task == 'regression':
+            dict_task['mae_errors = AverageMeter()
+        else:
+            dict_task['accuracies'] = AverageMeter()
+            dict_task['precisions'] = AverageMeter()
+            dict_task['recalls'] = AverageMeter()
+            dict_task['fscores'] = AverageMeter()
+            dict_task['auc_scores'] = AverageMeter()
+        scores[task_id] = dict_task
+    # batch_time = AverageMeter()
+    # losses = AverageMeter()
+    # if args.task == 'regression':
+    #     mae_errors = AverageMeter()
+    # else:
+    #     accuracies = AverageMeter()
+    #     precisions = AverageMeter()
+    #     recalls = AverageMeter()
+    #     fscores = AverageMeter()
+    #     auc_scores = AverageMeter()
     if test:
         test_targets = []
         test_preds = []
