@@ -80,7 +80,7 @@ class CrystalGraphConvNet(nn.Module):
     material properties.
     """
     def __init__(self, orig_atom_fea_len, nbr_fea_len,
-                 atom_fea_len=64, n_conv=3, h_fea_len=128, n_h=1,
+                 atom_fea_len=64, n_conv=3, h_fea_len=128, n_h=1, output_nodes=[1],
                  classification=False):
         """
         Initialize CrystalGraphConvNet.
@@ -117,9 +117,9 @@ class CrystalGraphConvNet(nn.Module):
 
         self.heads = nn.ModuleList(
             ResidualNetwork(
-                input_dim=config.hidden_features,   # Input from the hidden layer
+                input_dim=h_fea_len,   # Input from the hidden layer
                 output_dim=nodes,        # 2x output for mean and log_std
-                hidden_layer_dims=[512, 128, 128],         # Example hidden layers
+                hidden_layer_dims=[256, 128],         # Example hidden layers
                 activation=nn.ReLU,                # Activation function
                 batch_norm=True                     # Use batch normalization
             ) for nodes in output_nodes
