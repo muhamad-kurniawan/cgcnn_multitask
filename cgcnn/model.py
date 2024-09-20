@@ -116,7 +116,7 @@ class CrystalGraphConvNet(nn.Module):
                                              for _ in range(n_h-1)])
 
         self.heads = nn.ModuleList(
-            ResidualNetwork(
+            ResidualNetworkOut(
                 input_dim=h_fea_len,   # Input from the hidden layer
                 output_dim=nodes,        # 2x output for mean and log_std
                 hidden_layer_dims=[256, 128],         # Example hidden layers
@@ -124,6 +124,7 @@ class CrystalGraphConvNet(nn.Module):
                 batch_norm=True                     # Use batch normalization
             ) for nodes in output_nodes
         )
+        
                      
         # if self.classification:
         #     self.fc_out = nn.Linear(h_fea_len, 2)
@@ -206,7 +207,7 @@ class CrystalGraphConvNet(nn.Module):
                       for idx_map in crystal_atom_idx]
         return torch.cat(summed_fea, dim=0)
 
-class ResidualNetwork(nn.Module):
+class ResidualNetworkOut(nn.Module):
     """Feed forward Residual Neural Network."""
 
     def __init__(
