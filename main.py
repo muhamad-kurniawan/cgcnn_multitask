@@ -266,7 +266,7 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks)
         # compute output
         outputs = model(*input_var)
         losses = 0
-        for idx, output in enumerate(outputs)
+        for idx, output in enumerate(outputs):
           task_id = f'task_{idx}'
           target = targets[idx]
           loss = criterions[idx](output, targets_var[idx])
@@ -341,7 +341,13 @@ def validate(val_loader, model, criterion, normalizer, test=False):
             dict_task['recalls'] = AverageMeter()
             dict_task['fscores'] = AverageMeter()
             dict_task['auc_scores'] = AverageMeter()
+        if test:
+            dict_task['test_targets'] = []
+            dict_task['test_preds'] = []
+            dict_task['test_cif_ids'] = []
+          
         scores[task_id] = dict_task
+        
     # batch_time = AverageMeter()
     # losses = AverageMeter()
     # if args.task == 'regression':
@@ -352,17 +358,12 @@ def validate(val_loader, model, criterion, normalizer, test=False):
     #     recalls = AverageMeter()
     #     fscores = AverageMeter()
     #     auc_scores = AverageMeter()
-
-    if test:
-        test_targets = []
-        test_preds = []
-        test_cif_ids = []
-
+        
     # switch to evaluate mode
     model.eval()
 
     end = time.time()
-    for i, (input, target, batch_cif_ids) in enumerate(val_loader):
+    for i, (input, targets, batch_cif_ids) in enumerate(val_loader):
         if args.cuda:
             with torch.no_grad():
                 input_var = (Variable(input[0].cuda(non_blocking=True)),
@@ -376,49 +377,66 @@ def validate(val_loader, model, criterion, normalizer, test=False):
                              input[2],
                              input[3])
 
-      
-        if args.task == 'regression':
-            target_normed = normalizer.norm(target)
-        else:
-            target_normed = target.view(-1).long()
-        if args.cuda:
-            with torch.no_grad():
-                target_var = Variable(target_normed.cuda(non_blocking=True))
-        else:
-            with torch.no_grad():
-                target_var = Variable(target_normed)
+        targets_var = []
+        for idx, t in enumerate(tasks):
+          if t == 'regression':
+              target_normed.append(normalizer.norm(targets[idx]))
+          else:
+              target_normed.append(targets[idx].view(-1).long())
+          if args.cuda:
+              targets_var.append(Variable(targets_normed.cuda(non_blocking=True)))
+          else:
+              targets_var.append(Variable(targets_normed))
+
+        # if args.task == 'regression':
+        #     target_normed = normalizer.norm(target)
+        # else:
+        #     target_normed = target.view(-1).long()
+        # if args.cuda:
+        #     with torch.no_grad():
+        #         target_var = Variable(target_normed.cuda(non_blocking=True))
+        # else:
+        #     with torch.no_grad():
+        #         target_var = Variable(target_normed)
 
         # compute output
         output = model(*input_var)
-        loss = criterion(output, target_var)
+        losses = 0
+        for idx, output in enumerate(outputs):
+          task_id = f'task_{idx}'
+          target = targets[idx]
+          loss = criterions[idx](output, targets_var[idx])
+          # loss = criterion(output, target_var)
 
-        # measure accuracy and record loss
-        if args.task == 'regression':
-            mae_error = mae(normalizer.denorm(output.data.cpu()), target)
-            losses.update(loss.data.cpu().item(), target.size(0))
-            mae_errors.update(mae_error, target.size(0))
-            if test:
-                test_pred = normalizer.denorm(output.data.cpu())
-                test_target = target
-                test_preds += test_pred.view(-1).tolist()
-                test_targets += test_target.view(-1).tolist()
-                test_cif_ids += batch_cif_ids
-        else:
-            accuracy, precision, recall, fscore, auc_score = \
-                class_eval(output.data.cpu(), target)
-            losses.update(loss.data.cpu().item(), target.size(0))
-            accuracies.update(accuracy, target.size(0))
-            precisions.update(precision, target.size(0))
-            recalls.update(recall, target.size(0))
-            fscores.update(fscore, target.size(0))
-            auc_scores.update(auc_score, target.size(0))
-            if test:
-                test_pred = torch.exp(output.data.cpu())
-                test_target = target
-                assert test_pred.shape[1] == 2
-                test_preds += test_pred[:, 1].tolist()
-                test_targets += test_target.view(-1).tolist()
-                test_cif_ids += batch_cif_ids
+          # measure accuracy and record loss
+  
+          for idx, output in enumerate(outputs):
+            if args.task == 'regression':
+                mae_error = mae(normalizer.denorm(output.data.cpu()), target)
+                scores[task_id]['losses'].update(loss.data.cpu(), target.size(0))
+                scores[task_id]['mae_errors'].update(mae_error, target.size(0))
+                if test:
+                    test_pred = normalizer.denorm(output.data.cpu())
+                    test_target = target
+                    scores[task_id]['test_preds'] += test_pred.view(-1).tolist()
+                    scores[task_id]['test_targets'] += test_target.view(-1).tolist()
+                    scores[task_id]['test_cif_ids'] += batch_cif_ids
+            else:
+                accuracy, precision, recall, fscore, auc_score = \
+                    class_eval(output.data.cpu(), target)
+                scores[task_id]['losses'].update(loss.data.cpu().item(), target.size(0))
+                scores[task_id]['accuracies'].update(accuracy, target.size(0))
+                scores[task_id]['precisions'].update(precision, target.size(0))
+                scores[task_id]['recalls'].update(recall, target.size(0))
+                scores[task_id]['fscores'].update(fscore, target.size(0))
+                scores[task_id]['auc_scores'].update(auc_score, target.size(0
+                if test:
+                    test_pred = torch.exp(output.data.cpu())
+                    test_target = target
+                    assert test_pred.shape[1] == 2
+                    scores[task_id]['test_preds'] += test_pred[:, 1].tolist()
+                    scores[task_id]['test_targets'] += test_target.view(-1).tolist()
+                    scores[task_id]['test_cif_ids'] += batch_cif_ids
 
         # measure elapsed time
         batch_time.update(time.time() - end)
