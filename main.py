@@ -4,6 +4,7 @@ import shutil
 import sys
 import time
 import warnings
+import json
 from random import sample
 
 import numpy as np
@@ -92,6 +93,10 @@ def main():
     global args, best_mae_error
 
     # load data
+
+    config_file = args.data_options[0] + '/config.json'
+    with open(config_file) as f:
+        config = json.load(f)
     dataset = CIFData(*args.data_options)
     collate_fn = collate_pool
     train_loader, val_loader, test_loader = get_train_val_test_loader(
@@ -108,21 +113,6 @@ def main():
         test_size=args.test_size,
         return_test=True)
 
-    # obtain target value normalizer
-    if args.task == 'classification':
-        normalizer = Normalizer(torch.zeros(2))
-        normalizer.load_state_dict({'mean': 0., 'std': 1.})
-    else:
-        if len(dataset) < 500:
-            warnings.warn('Dataset has less than 500 data points. '
-                          'Lower accuracy is expected. ')
-            sample_data_list = [dataset[i] for i in range(len(dataset))]
-        else:
-            sample_data_list = [dataset[i] for i in
-                                sample(range(len(dataset)), 500)]
-        _, sample_target, _ = collate_pool(sample_data_list)
-        normalizer = Normalizer(sample_target)
-
     # build model
     structures, _, _ = dataset[0]
     orig_atom_fea_len = structures[0].shape[-1]
@@ -132,16 +122,35 @@ def main():
                                 n_conv=args.n_conv,
                                 h_fea_len=args.h_fea_len,
                                 n_h=args.n_h,
+                                output_nodes=config.output_nodes,
                                 classification=True if args.task ==
                                                        'classification' else False)
     if args.cuda:
         model.cuda()
 
-    # define loss func and optimizer
-    if args.task == 'classification':
-        criterion = nn.NLLLoss()
-    else:
-        criterion = nn.MSELoss()
+    # obtain target value normalizer
+    criterions = []
+    normalizers = []
+    for task in config.tasks:
+      # define loss func and optimizer
+      if task == 'classification':
+          criterions.append(nn.NLLLoss())
+          normalizer = Normalizer(torch.zeros(2))
+          normalizer.load_state_dict({'mean': 0., 'std': 1.})
+          normalizers.append(normalizer)
+      else:
+          criterions.append(nn.MSELoss())
+          if len(dataset) < 500:
+            warnings.warn('Dataset has less than 500 data points. '
+                          'Lower accuracy is expected. ')
+            sample_data_list = [dataset[i] for i in range(len(dataset))]
+          else:
+              sample_data_list = [dataset[i] for i in
+                                  sample(range(len(dataset)), 500)]
+          _, sample_target, _ = collate_pool(sample_data_list)
+          normalizer = Normalizer(sample_target)
+          normalizers.append(normalizer)
+    
     if args.optim == 'SGD':
         optimizer = optim.SGD(model.parameters(), args.lr,
                               momentum=args.momentum,
@@ -172,7 +181,7 @@ def main():
 
     for epoch in range(args.start_epoch, args.epochs):
         # train for one epoch
-        train(train_loader, model, criterion, optimizer, epoch, normalizer)
+        train(train_loader, model, criterions, optimizer, epoch, normalizers, config.tasks)
 
         # evaluate on validation set
         mae_error = validate(val_loader, model, criterion, normalizer)
@@ -206,7 +215,7 @@ def main():
     validate(test_loader, model, criterion, normalizer, test=True)
 
 
-def train(train_loader, model, criterion, optimizer, epoch, normalizer):
+def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks):
     scores = {}
     for t in range(len(tasks)):
       task_id = f'task_{t}'
@@ -228,7 +237,7 @@ def train(train_loader, model, criterion, optimizer, epoch, normalizer):
     model.train()
 
     end = time.time()
-    for i, (input, target, _) in enumerate(train_loader):
+    for i, (input, targets, _) in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
 
@@ -243,37 +252,44 @@ def train(train_loader, model, criterion, optimizer, epoch, normalizer):
                          input[2],
                          input[3])
         # normalize target
-        if args.task == 'regression':
-            target_normed = normalizer.norm(target)
-        else:
-            target_normed = target.view(-1).long()
-        if args.cuda:
-            target_var = Variable(target_normed.cuda(non_blocking=True))
-        else:
-            target_var = Variable(target_normed)
+        targets_var = []
+        for idx, t in enumerate(tasks):
+          if t == 'regression':
+              target_normed.append(normalizer.norm(targets[idx]))
+          else:
+              target_normed.append(targets[idx].view(-1).long())
+          if args.cuda:
+              targets_var.append(Variable(targets_normed.cuda(non_blocking=True)))
+          else:
+              targets_var.append(Variable(targets_normed))
 
         # compute output
-        output = model(*input_var)
-        loss = criterion(output, target_var)
+        outputs = model(*input_var)
+        losses = 0
+        for idx, output in enumerate(outputs)
+          task_id = f'task_{idx}'
+          target = targets[idx]
+          loss = criterions[idx](output, targets_var[idx])
 
-        # measure accuracy and record loss
-        if args.task == 'regression':
-            mae_error = mae(normalizer.denorm(output.data.cpu()), target)
-            losses.update(loss.data.cpu(), target.size(0))
-            mae_errors.update(mae_error, target.size(0))
-        else:
-            accuracy, precision, recall, fscore, auc_score = \
-                class_eval(output.data.cpu(), target)
-            losses.update(loss.data.cpu().item(), target.size(0))
-            accuracies.update(accuracy, target.size(0))
-            precisions.update(precision, target.size(0))
-            recalls.update(recall, target.size(0))
-            fscores.update(fscore, target.size(0))
-            auc_scores.update(auc_score, target.size(0))
-
+          # measure accuracy and record loss
+          if tasks[idx] == 'regression':
+              mae_error = mae(normalizer.denorm(output.data.cpu()), target)
+              scores[task_id]['losses'].update(loss.data.cpu(), target.size(0))
+              scores[task_id]['mae_errors'].update(mae_error, target.size(0))
+          else:
+              accuracy, precision, recall, fscore, auc_score = \
+                  class_eval(output.data.cpu(), target)
+              scores[task_id]['losses'].update(loss.data.cpu().item(), target.size(0))
+              scores[task_id]['accuracies'].update(accuracy, target.size(0))
+              scores[task_id]['precisions'].update(precision, target.size(0))
+              scores[task_id]['recalls'].update(recall, target.size(0))
+              scores[task_id]['fscores'].update(fscore, target.size(0))
+              scores[task_id]['auc_scores'].update(auc_score, target.size(0))
+          losses += loss
+          
         # compute gradient and do SGD step
         optimizer.zero_grad()
-        loss.backward()
+        losses.backward()
         optimizer.step()
 
         # measure elapsed time
@@ -281,30 +297,32 @@ def train(train_loader, model, criterion, optimizer, epoch, normalizer):
         end = time.time()
 
         if i % args.print_freq == 0:
-            if args.task == 'regression':
-                print('Epoch: [{0}][{1}/{2}]\t'
-                      'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                      'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
-                      'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-                      'MAE {mae_errors.val:.3f} ({mae_errors.avg:.3f})'.format(
-                    epoch, i, len(train_loader), batch_time=batch_time,
-                    data_time=data_time, loss=losses, mae_errors=mae_errors)
-                )
-            else:
-                print('Epoch: [{0}][{1}/{2}]\t'
-                      'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                      'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
-                      'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-                      'Accu {accu.val:.3f} ({accu.avg:.3f})\t'
-                      'Precision {prec.val:.3f} ({prec.avg:.3f})\t'
-                      'Recall {recall.val:.3f} ({recall.avg:.3f})\t'
-                      'F1 {f1.val:.3f} ({f1.avg:.3f})\t'
-                      'AUC {auc.val:.3f} ({auc.avg:.3f})'.format(
-                    epoch, i, len(train_loader), batch_time=batch_time,
-                    data_time=data_time, loss=losses, accu=accuracies,
-                    prec=precisions, recall=recalls, f1=fscores,
-                    auc=auc_scores)
-                )
+            for idx, task in enumerate(tasks):
+              task_id = f'task_{idx}'
+              if task == 'regression':
+                  print('Epoch: [{0}][{1}/{2}]\t'
+                        'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+                        'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
+                        'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
+                        'MAE {mae_errors.val:.3f} ({mae_errors.avg:.3f})'.format(
+                      epoch, i, len(train_loader), batch_time=scores[task_id]['batch_time'],
+                      data_time=scores[task_id]['data_time'], loss=scores[task_id]['losses'], mae_errors=scores[task_id]['mae_errors'])
+                  )
+              else:
+                  print('Epoch: [{0}][{1}/{2}]\t'
+                        'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+                        'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
+                        'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
+                        'Accu {accu.val:.3f} ({accu.avg:.3f})\t'
+                        'Precision {prec.val:.3f} ({prec.avg:.3f})\t'
+                        'Recall {recall.val:.3f} ({recall.avg:.3f})\t'
+                        'F1 {f1.val:.3f} ({f1.avg:.3f})\t'
+                        'AUC {auc.val:.3f} ({auc.avg:.3f})'.format(
+                      epoch, i, len(train_loader), batch_time=scores[task_id]['batch_time'],
+                      data_time=scores[task_id]['data_time'], loss=scores[task_id]['losses'], accu=scores[task_id]['accuracies'],
+                      prec=scores[task_id]['precisions'], recall=scores[task_id]['recalls'], f1=scores[task_id]['fscores'],
+                      auc=scores[task_id]['auc_scores'])
+                  )
 
 
 def validate(val_loader, model, criterion, normalizer, test=False):
@@ -334,6 +352,7 @@ def validate(val_loader, model, criterion, normalizer, test=False):
     #     recalls = AverageMeter()
     #     fscores = AverageMeter()
     #     auc_scores = AverageMeter()
+
     if test:
         test_targets = []
         test_preds = []
@@ -356,6 +375,8 @@ def validate(val_loader, model, criterion, normalizer, test=False):
                              Variable(input[1]),
                              input[2],
                              input[3])
+
+      
         if args.task == 'regression':
             target_normed = normalizer.norm(target)
         else:
