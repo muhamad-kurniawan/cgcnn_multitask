@@ -329,26 +329,26 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks)
 
 def validate(val_loader, model, criterion, normalizer, tasks, test=False):
     scores = {}
-      for t in range(len(tasks)):
-        task_id = f'task_{t}'
-        dict_task = {}
-        dict_task['batch_time'] = AverageMeter()
-        # dict_task['data_time'] = AverageMeter()
-        dict_task['losses'] = AverageMeter()
-        if args.task == 'regression':
-            dict_task['mae_errors'] = AverageMeter()
-        else:
-            dict_task['accuracies'] = AverageMeter()
-            dict_task['precisions'] = AverageMeter()
-            dict_task['recalls'] = AverageMeter()
-            dict_task['fscores'] = AverageMeter()
-            dict_task['auc_scores'] = AverageMeter()
-        if test:
-            dict_task['test_targets'] = []
-            dict_task['test_preds'] = []
-            dict_task['test_cif_ids'] = []
-          
-        scores[task_id] = dict_task
+    for t in range(len(tasks)):
+      task_id = f'task_{t}'
+      dict_task = {}
+      dict_task['batch_time'] = AverageMeter()
+      # dict_task['data_time'] = AverageMeter()
+      dict_task['losses'] = AverageMeter()
+      if args.task == 'regression':
+          dict_task['mae_errors'] = AverageMeter()
+      else:
+          dict_task['accuracies'] = AverageMeter()
+          dict_task['precisions'] = AverageMeter()
+          dict_task['recalls'] = AverageMeter()
+          dict_task['fscores'] = AverageMeter()
+          dict_task['auc_scores'] = AverageMeter()
+      if test:
+          dict_task['test_targets'] = []
+          dict_task['test_preds'] = []
+          dict_task['test_cif_ids'] = []
+        
+      scores[task_id] = dict_task
         
     # batch_time = AverageMeter()
     # losses = AverageMeter()
