@@ -108,12 +108,19 @@ class CrystalGraphConvNet(nn.Module):
                                     nbr_fea_len=nbr_fea_len)
                                     for _ in range(n_conv)])
         self.conv_to_fc = nn.Linear(atom_fea_len, h_fea_len)
-        self.conv_to_fc_softplus = nn.Softplus()
+        # self.conv_to_fc_softplus = nn.Softplus()
+        # if n_h > 1:
+        #     self.fcs = nn.ModuleList([nn.Linear(h_fea_len, h_fea_len)
+        #                               for _ in range(n_h-1)])
+        #     self.softpluses = nn.ModuleList([nn.Softplus()
+        #                                      for _ in range(n_h-1)])
+
+        self.activation = nn.ReLU()
+
         if n_h > 1:
             self.fcs = nn.ModuleList([nn.Linear(h_fea_len, h_fea_len)
                                       for _ in range(n_h-1)])
-            self.softpluses = nn.ModuleList([nn.Softplus()
-                                             for _ in range(n_h-1)])
+            self.acts = nn.ModuleList([nn.ReLU() for _ in range(n_h-1)])
 
         self.heads = nn.ModuleList(
             ResidualNetworkOut(
@@ -172,7 +179,7 @@ class CrystalGraphConvNet(nn.Module):
         if hasattr(self, 'fcs') and hasattr(self, 'softpluses'):
             for fc, softplus in zip(self.fcs, self.softpluses):
                 crys_fea = softplus(fc(crys_fea))
-        out = self.fc_out(crys_fea)
+        # out = self.fc_out(crys_fea)
 
         outputs = []
         # for head in self.heads:
@@ -180,7 +187,7 @@ class CrystalGraphConvNet(nn.Module):
         #     outputs.append(head(h))
 
         for head in self.heads:
-            outputs.append(head(h))
+            outputs.append(head(crys_fea))
         
         # if self.classification:
             # out = self.logsoftmax(out)
@@ -252,13 +259,22 @@ class ResidualNetworkOut(nn.Module):
         self.acts = nn.ModuleList(activation() for _ in range(len(dims) - 1))
 
         self.fc_out = nn.Linear(dims[-1], output_dim)
-
+        self.softplus = nn.Softplus()  # For regression
+        if self.classification:
+            self.logsoftmax = nn.LogSoftmax(dim=1)  # For classification
+        
     def forward(self, x):
         """Forward pass through network."""
         for fc, bn, res_fc, act in zip(self.fcs, self.bns, self.res_fcs, self.acts):
             x = act(bn(fc(x))) + res_fc(x)
-
-        return self.fc_out(x)
+        x = self.softplus(x)
+        x = self.fc_out(x)
+        
+        if self.classification:
+            x = self.logsoftmax(x)  # LogSoftmax for classification tasks
+            
+        # return self.fc_out(x)
+        return x
 
     def __repr__(self) -> str:
         input_dim = self.fcs[0].in_features
