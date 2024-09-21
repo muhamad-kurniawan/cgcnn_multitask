@@ -81,7 +81,7 @@ class CrystalGraphConvNet(nn.Module):
     """
     def __init__(self, orig_atom_fea_len, nbr_fea_len,
                  atom_fea_len=64, n_conv=3, h_fea_len=128, n_h=1, output_nodes=[1],
-                 classification=False):
+                 tasks=['regression']):
         """
         Initialize CrystalGraphConvNet.
 
@@ -102,7 +102,8 @@ class CrystalGraphConvNet(nn.Module):
           Number of hidden layers after pooling
         """
         super(CrystalGraphConvNet, self).__init__()
-        self.classification = classification
+        # self.classification = classification
+        self.tasks = tasks
         self.embedding = nn.Linear(orig_atom_fea_len, atom_fea_len)
         self.convs = nn.ModuleList([ConvLayer(atom_fea_len=atom_fea_len,
                                     nbr_fea_len=nbr_fea_len)
@@ -128,8 +129,9 @@ class CrystalGraphConvNet(nn.Module):
                 output_dim=nodes,        # 2x output for mean and log_std
                 hidden_layer_dims=[256, 128],         # Example hidden layers
                 activation=nn.ReLU,                # Activation function
-                batch_norm=True                     # Use batch normalization
-            ) for nodes in output_nodes
+                batch_norm=True,                     # Use batch normalization
+                task=task
+            ) for nodes, task in zip(output_nodes, self.tasks)
         )
         
                      
@@ -222,8 +224,9 @@ class ResidualNetworkOut(nn.Module):
         input_dim: int,
         output_dim: int,
         hidden_layer_dims: Sequence[int],
+        task,
         activation: type[nn.Module] = nn.ReLU,
-        batch_norm: bool = False,
+        batch_norm: bool = False,      
     ) -> None:
         """Create a feed forward neural network with skip connections.
 
@@ -236,7 +239,7 @@ class ResidualNetworkOut(nn.Module):
             batch_norm (bool, optional): Whether to use batch_norm. Defaults to False.
         """
         super().__init__()
-
+        self.task = task
         dims = [input_dim, *list(hidden_layer_dims)]
 
         self.fcs = nn.ModuleList(
@@ -260,7 +263,7 @@ class ResidualNetworkOut(nn.Module):
 
         self.fc_out = nn.Linear(dims[-1], output_dim)
         self.softplus = nn.Softplus()  # For regression
-        if self.classification:
+        if self.task=='classification'
             self.logsoftmax = nn.LogSoftmax(dim=1)  # For classification
         
     def forward(self, x):
@@ -270,7 +273,7 @@ class ResidualNetworkOut(nn.Module):
         x = self.softplus(x)
         x = self.fc_out(x)
         
-        if self.classification:
+        if self.task=='classification':
             x = self.logsoftmax(x)  # LogSoftmax for classification tasks
             
         # return self.fc_out(x)
