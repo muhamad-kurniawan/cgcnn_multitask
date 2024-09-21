@@ -327,7 +327,7 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks)
                   )
 
 
-def validate(val_loader, model, criterion, normalizer, test=False):
+def validate(val_loader, model, criterion, normalizer, tasks, test=False):
     scores = {}
       for t in range(len(tasks)):
         task_id = f'task_{t}'
@@ -336,7 +336,7 @@ def validate(val_loader, model, criterion, normalizer, test=False):
         # dict_task['data_time'] = AverageMeter()
         dict_task['losses'] = AverageMeter()
         if args.task == 'regression':
-            dict_task['mae_errors = AverageMeter()
+            dict_task['mae_errors'] = AverageMeter()
         else:
             dict_task['accuracies'] = AverageMeter()
             dict_task['precisions'] = AverageMeter()
@@ -413,7 +413,7 @@ def validate(val_loader, model, criterion, normalizer, test=False):
           # measure accuracy and record loss
   
           for idx, output in enumerate(outputs):
-            if args.task == 'regression':
+            if tasks[idx] == 'regression':
                 mae_error = mae(normalizer.denorm(output.data.cpu()), target)
                 scores[task_id]['losses'].update(loss.data.cpu(), target.size(0))
                 scores[task_id]['mae_errors'].update(mae_error, target.size(0))
@@ -474,24 +474,26 @@ def validate(val_loader, model, criterion, normalizer, test=False):
                       accu=scores[task_id]['accuracies'], prec=scores[task_id]['precisions'], recall=scores[task_id]['recalls'],
                       f1=scores[task_id]['fscores'], auc=scores[task_id]['auc_scores']))
 
-    if test:
-        star_label = '**'
-        import csv
-        with open('test_results.csv', 'w') as f:
-            writer = csv.writer(f)
-            for cif_id, target, pred in zip(test_cif_ids, test_targets,
-                                            test_preds):
-                writer.writerow((cif_id, target, pred))
-    else:
-        star_label = '*'
-    if args.task == 'regression':
-        print(' {star} MAE {mae_errors.avg:.3f}'.format(star=star_label,
-                                                        mae_errors=mae_errors))
-        return mae_errors.avg
-    else:
-        print(' {star} AUC {auc.avg:.3f}'.format(star=star_label,
-                                                 auc=auc_scores))
-        return auc_scores.avg
+    for idx, t in enumerate(tasks):
+      task_id = f'task_{idx}'
+      if test:
+          star_label = '**'
+          import csv
+          with open('test_results.csv', 'w') as f:
+              writer = csv.writer(f)
+              for cif_id, target, pred in zip(scores[task_id]['test_cif_ids'], scores[task_id]['test_targets'],
+                                              scores[task_id]['test_preds']):
+                  writer.writerow((cif_id, target, pred))
+      else:
+          star_label = '*'
+      if args.task == 'regression':
+          print(' {star} MAE {mae_errors.avg:.3f}'.format(star=star_label,
+                                                          mae_errors=scores[task_id]['mae_errors']))
+          return scores[task_id]['mae_errors'].avg
+      else:
+          print(' {star} AUC {auc.avg:.3f}'.format(star=star_label,
+                                                   auc=auc_scores[idx]))
+          return scores[task_id]['mae_errors'].avg
 
 
 class Normalizer(object):
