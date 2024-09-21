@@ -226,7 +226,7 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks)
       dict_task['data_time'] = AverageMeter()
       dict_task['losses'] = AverageMeter()
       if args.task == 'regression':
-          dict_task['mae_errors = AverageMeter()
+          dict_task['mae_errors'] = AverageMeter()
       else:
           dict_task['accuracies'] = AverageMeter()
           dict_task['precisions'] = AverageMeter()
