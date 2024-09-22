@@ -328,7 +328,7 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks)
               )
 
 
-def validate(val_loader, model, criterion, normalizers, tasks, test=False):
+def validate(val_loader, model, criterions, normalizers, tasks, test=False):
   batch_time = AverageMeter()  
   scores = {}
   for t in range(len(tasks)):
