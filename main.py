@@ -451,7 +451,8 @@ def validate(val_loader, model, criterions, normalizers, tasks, test=False):
          for idx, task in enumerate(tasks):
             task_id = f'task_{idx}'
             if task == 'regression':
-                print('Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+                print('Test: [{0}/{1}]\t'
+                  'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                       # 'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
                       'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
                       'MAE {mae_errors.val:.3f} ({mae_errors.avg:.3f})'.format(
