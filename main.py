@@ -172,7 +172,7 @@ def main():
             best_mae_error = checkpoint['best_mae_error']
             model.load_state_dict(checkpoint['state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer'])
-            normalizers.load_state_dict(checkpoint['normalizer'])
+            normalizers = [norm.load_state_dict(checkpoint['normalizers'][i]) for i, norm in enumerate(normalizers)]
             print("=> loaded checkpoint '{}' (epoch {})"
                   .format(args.resume, checkpoint['epoch']))
         else:
@@ -206,7 +206,7 @@ def main():
             'state_dict': model.state_dict(),
             'best_mae_error': best_mae_error,
             'optimizer': optimizer.state_dict(),
-            'normalizer': normalizers.state_dict(),
+            'normalizers': [norm.state_dict() for norm in normalizers],
             'args': vars(args)
         }, is_best)
 
