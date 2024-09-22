@@ -445,7 +445,7 @@ def validate(val_loader, model, criterion, normalizer, tasks, test=False):
         end = time.time()
 
         if i % args.print_freq == 0:
-           print('Test: [{0}/{1}]\t'                
+           print('Test: [{0}/{1}]\t')                
            for idx, task in enumerate(tasks):
               task_id = f'task_{idx}'
               if task == 'regression':
