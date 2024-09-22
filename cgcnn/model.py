@@ -2,6 +2,7 @@ from __future__ import print_function, division
 
 import torch
 import torch.nn as nn
+from collections.abc import Sequence
 
 
 class ConvLayer(nn.Module):
