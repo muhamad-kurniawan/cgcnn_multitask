@@ -258,7 +258,7 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks)
     targets_var = []
     for idx, t in enumerate(tasks):
       if t == 'regression':
-          target_normed = normalizer.norm(targets[idx]))
+          target_normed = normalizer.norm(targets[idx])
       else:
           target_normed = targets[idx].view(-1).long()
       if args.cuda:
