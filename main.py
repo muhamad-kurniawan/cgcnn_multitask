@@ -404,7 +404,7 @@ def validate(val_loader, model, criterion, normalizers, tasks, test=False):
       #         target_var = Variable(target_normed)
 
       # compute output
-      output = model(*input_var)
+      outputs = model(*input_var)
       losses = 0
       for idx, output in enumerate(outputs):
         task_id = f'task_{idx}'
