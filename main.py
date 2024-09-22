@@ -262,9 +262,9 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks)
       else:
           target_normed = targets[idx].view(-1).long()
       if args.cuda:
-          targets_var.append(Variable(targets_normed.cuda(non_blocking=True)))
+          targets_var.append(Variable(target_normed.cuda(non_blocking=True)))
       else:
-          targets_var.append(Variable(targets_normed))
+          targets_var.append(Variable(target_normed))
 
     # compute output
     outputs = model(*input_var)
@@ -388,9 +388,9 @@ def validate(val_loader, model, criterion, normalizers, tasks, test=False):
         else:
             target_normed = targets[idx].view(-1).long()
         if args.cuda:
-            targets_var.append(Variable(targets_normed.cuda(non_blocking=True)))
+            targets_var.append(Variable(target_normed.cuda(non_blocking=True)))
         else:
-            targets_var.append(Variable(targets_normed))
+            targets_var.append(Variable(target_normed))
 
       # if args.task == 'regression':
       #     target_normed = normalizer.norm(target)
