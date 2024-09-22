@@ -263,7 +263,7 @@ class ResidualNetworkOut(nn.Module):
 
         self.fc_out = nn.Linear(dims[-1], output_dim)
         self.softplus = nn.Softplus()  # For regression
-        if self.task=='classification'
+        if self.task=='classification':
             self.logsoftmax = nn.LogSoftmax(dim=1)  # For classification
         
     def forward(self, x):
