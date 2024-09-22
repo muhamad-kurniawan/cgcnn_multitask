@@ -122,7 +122,7 @@ def main():
                                 n_conv=args.n_conv,
                                 h_fea_len=args.h_fea_len,
                                 n_h=args.n_h,
-                                output_nodes=config.output_nodes,
+                                output_nodes=config.nodes,
                                 # classification=True if args.task ==
                                 #                        'classification' else False
                                 tasks=config.tasks
