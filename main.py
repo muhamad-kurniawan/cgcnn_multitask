@@ -218,12 +218,14 @@ def main():
 
 
 def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks):
-    scores = {}
+  batch_time = AverageMeter()
+  data_time = AverageMeter()  
+  scores = {}
     for t in range(len(tasks)):
       task_id = f'task_{t}'
       dict_task = {}
-      dict_task['batch_time'] = AverageMeter()
-      dict_task['data_time'] = AverageMeter()
+      # dict_task['batch_time'] = AverageMeter()
+      # dict_task['data_time'] = AverageMeter()
       dict_task['losses'] = AverageMeter()
       if args.task == 'regression':
           dict_task['mae_errors'] = AverageMeter()
@@ -307,8 +309,8 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks)
                         'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
                         'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
                         'MAE {mae_errors.val:.3f} ({mae_errors.avg:.3f})'.format(
-                      epoch, i, len(train_loader), batch_time=scores[task_id]['batch_time'],
-                      data_time=scores[task_id]['data_time'], loss=scores[task_id]['losses'], mae_errors=scores[task_id]['mae_errors'])
+                      epoch, i, len(train_loader), batch_time=batch_time,
+                      data_time=data_time, loss=scores[task_id]['losses'], mae_errors=scores[task_id]['mae_errors'])
                   )
               else:
                   print('Epoch: [{0}][{1}/{2}]\t'
@@ -328,11 +330,12 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks)
 
 
 def validate(val_loader, model, criterion, normalizer, tasks, test=False):
-    scores = {}
+  batch_time = AverageMeter()  
+  scores = {}
     for t in range(len(tasks)):
       task_id = f'task_{t}'
       dict_task = {}
-      dict_task['batch_time'] = AverageMeter()
+      # dict_task['batch_time'] = AverageMeter()
       # dict_task['data_time'] = AverageMeter()
       dict_task['losses'] = AverageMeter()
       if args.task == 'regression':
@@ -460,7 +463,7 @@ def validate(val_loader, model, criterion, normalizer, tasks, test=False):
                 #       'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                 #       'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
                 #       'MAE {mae_errors.val:.3f} ({mae_errors.avg:.3f})'.format(
-                #     i, len(val_loader), batch_time=scores[task_id]['batch_time'], loss=scores[task_id]['losses'],
+                #     i, len(val_loader), batch_time=batch_time, loss=scores[task_id]['losses'],
                 #     mae_errors=scores[task_id]['mae_errors']))
               else:
                   print('Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
@@ -470,7 +473,7 @@ def validate(val_loader, model, criterion, normalizer, tasks, test=False):
                         'Recall {recall.val:.3f} ({recall.avg:.3f})\t'
                         'F1 {f1.val:.3f} ({f1.avg:.3f})\t'
                         'AUC {auc.val:.3f} ({auc.avg:.3f})'.format(
-                      i, len(val_loader), batch_time=scores[task_id]['batch_time'], loss=scores[task_id]['losses'],
+                      i, len(val_loader), batch_time=batch_time, loss=scores[task_id]['losses'],
                       accu=scores[task_id]['accuracies'], prec=scores[task_id]['precisions'], recall=scores[task_id]['recalls'],
                       f1=scores[task_id]['fscores'], auc=scores[task_id]['auc_scores']))
 
