@@ -175,8 +175,9 @@ class CrystalGraphConvNet(nn.Module):
         for conv_func in self.convs:
             atom_fea = conv_func(atom_fea, nbr_fea, nbr_fea_idx)
         crys_fea = self.pooling(atom_fea, crystal_atom_idx)
-        crys_fea = self.conv_to_fc(self.conv_to_fc_softplus(crys_fea))
-        crys_fea = self.conv_to_fc_softplus(crys_fea)
+        crys_fea = self.activation(self.conv_to_fc(crys_fea))
+        # crys_fea = self.conv_to_fc(self.conv_to_fc_softplus(crys_fea))
+        # crys_fea = self.conv_to_fc_softplus(crys_fea)
         if self.classification:
             crys_fea = self.dropout(crys_fea)
         if hasattr(self, 'fcs') and hasattr(self, 'softpluses'):
