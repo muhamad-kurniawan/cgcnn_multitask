@@ -431,7 +431,7 @@ def validate(val_loader, model, criterion, normalizer, tasks, test=False):
                 scores[task_id]['precisions'].update(precision, target.size(0))
                 scores[task_id]['recalls'].update(recall, target.size(0))
                 scores[task_id]['fscores'].update(fscore, target.size(0))
-                scores[task_id]['auc_scores'].update(auc_score, target.size(0
+                scores[task_id]['auc_scores'].update(auc_score, target.size(0))
                 if test:
                     test_pred = torch.exp(output.data.cpu())
                     test_target = target
