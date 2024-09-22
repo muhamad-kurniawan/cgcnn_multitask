@@ -122,10 +122,10 @@ def main():
                                 n_conv=args.n_conv,
                                 h_fea_len=args.h_fea_len,
                                 n_h=args.n_h,
-                                output_nodes=config.nodes,
+                                output_nodes=config["nodes"],
                                 # classification=True if args.task ==
                                 #                        'classification' else False
-                                tasks=config.tasks
+                                tasks=config["tasks"]
                                )
     if args.cuda:
         model.cuda()
@@ -133,7 +133,7 @@ def main():
     # obtain target value normalizer
     criterions = []
     normalizers = []
-    for task in config.tasks:
+    for task in config["tasks"]:
       # define loss func and optimizer
       if task == 'classification':
           criterions.append(nn.NLLLoss())
@@ -183,10 +183,10 @@ def main():
 
     for epoch in range(args.start_epoch, args.epochs):
         # train for one epoch
-        train(train_loader, model, criterions, optimizer, epoch, normalizers, config.tasks)
+        train(train_loader, model, criterions, optimizer, epoch, normalizers, config["tasks"])
 
         # evaluate on validation set
-        mae_error = validate(val_loader, model, criterion, normalizer)
+        mae_error = validate(val_loader, model, criterion, normalizer, tasks=config["tasks"])
 
         if mae_error != mae_error:
             print('Exit due to NaN')
