@@ -186,7 +186,7 @@ def main():
         train(train_loader, model, criterions, optimizer, epoch, normalizers, config["tasks"])
 
         # evaluate on validation set
-        mae_error = validate(val_loader, model, criterion, normalizers, tasks=config["tasks"])
+        mae_error = validate(val_loader, model, criterions, normalizers, tasks=config["tasks"])
 
         if mae_error != mae_error:
             print('Exit due to NaN')
