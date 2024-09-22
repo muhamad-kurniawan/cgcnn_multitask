@@ -216,117 +216,116 @@ def main():
     model.load_state_dict(best_checkpoint['state_dict'])
     validate(test_loader, model, criterion, normalizer, test=True)
 
-
 def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks):
   batch_time = AverageMeter()
   data_time = AverageMeter()  
   scores = {}
-    for t in range(len(tasks)):
-      task_id = f'task_{t}'
-      dict_task = {}
-      # dict_task['batch_time'] = AverageMeter()
-      # dict_task['data_time'] = AverageMeter()
-      dict_task['losses'] = AverageMeter()
-      if args.task == 'regression':
-          dict_task['mae_errors'] = AverageMeter()
-      else:
-          dict_task['accuracies'] = AverageMeter()
-          dict_task['precisions'] = AverageMeter()
-          dict_task['recalls'] = AverageMeter()
-          dict_task['fscores'] = AverageMeter()
-          dict_task['auc_scores'] = AverageMeter()
-      scores[task_id] = dict_task
+  for t in range(len(tasks)):
+    task_id = f'task_{t}'
+    dict_task = {}
+    # dict_task['batch_time'] = AverageMeter()
+    # dict_task['data_time'] = AverageMeter()
+    dict_task['losses'] = AverageMeter()
+    if args.task == 'regression':
+        dict_task['mae_errors'] = AverageMeter()
+    else:
+        dict_task['accuracies'] = AverageMeter()
+        dict_task['precisions'] = AverageMeter()
+        dict_task['recalls'] = AverageMeter()
+        dict_task['fscores'] = AverageMeter()
+        dict_task['auc_scores'] = AverageMeter()
+    scores[task_id] = dict_task
 
     # switch to train mode
-    model.train()
+  model.train()
 
+  end = time.time()
+  for i, (input, targets, _) in enumerate(train_loader):
+    # measure data loading time
+    data_time.update(time.time() - end)
+
+    if args.cuda:
+        input_var = (Variable(input[0].cuda(non_blocking=True)),
+                     Variable(input[1].cuda(non_blocking=True)),
+                     input[2].cuda(non_blocking=True),
+                     [crys_idx.cuda(non_blocking=True) for crys_idx in input[3]])
+    else:
+        input_var = (Variable(input[0]),
+                     Variable(input[1]),
+                     input[2],
+                     input[3])
+    # normalize target
+    targets_var = []
+    for idx, t in enumerate(tasks):
+      if t == 'regression':
+          target_normed.append(normalizer.norm(targets[idx]))
+      else:
+          target_normed.append(targets[idx].view(-1).long())
+      if args.cuda:
+          targets_var.append(Variable(targets_normed.cuda(non_blocking=True)))
+      else:
+          targets_var.append(Variable(targets_normed))
+
+    # compute output
+    outputs = model(*input_var)
+    losses = 0
+    for idx, output in enumerate(outputs):
+      task_id = f'task_{idx}'
+      target = targets[idx]
+      loss = criterions[idx](output, targets_var[idx])
+
+      # measure accuracy and record loss
+      if tasks[idx] == 'regression':
+          mae_error = mae(normalizer.denorm(output.data.cpu()), target)
+          scores[task_id]['losses'].update(loss.data.cpu(), target.size(0))
+          scores[task_id]['mae_errors'].update(mae_error, target.size(0))
+      else:
+          accuracy, precision, recall, fscore, auc_score = \
+              class_eval(output.data.cpu(), target)
+          scores[task_id]['losses'].update(loss.data.cpu().item(), target.size(0))
+          scores[task_id]['accuracies'].update(accuracy, target.size(0))
+          scores[task_id]['precisions'].update(precision, target.size(0))
+          scores[task_id]['recalls'].update(recall, target.size(0))
+          scores[task_id]['fscores'].update(fscore, target.size(0))
+          scores[task_id]['auc_scores'].update(auc_score, target.size(0))
+      losses += loss
+      
+    # compute gradient and do SGD step
+    optimizer.zero_grad()
+    losses.backward()
+    optimizer.step()
+
+    # measure elapsed time
+    batch_time.update(time.time() - end)
     end = time.time()
-    for i, (input, targets, _) in enumerate(train_loader):
-        # measure data loading time
-        data_time.update(time.time() - end)
 
-        if args.cuda:
-            input_var = (Variable(input[0].cuda(non_blocking=True)),
-                         Variable(input[1].cuda(non_blocking=True)),
-                         input[2].cuda(non_blocking=True),
-                         [crys_idx.cuda(non_blocking=True) for crys_idx in input[3]])
-        else:
-            input_var = (Variable(input[0]),
-                         Variable(input[1]),
-                         input[2],
-                         input[3])
-        # normalize target
-        targets_var = []
-        for idx, t in enumerate(tasks):
-          if t == 'regression':
-              target_normed.append(normalizer.norm(targets[idx]))
-          else:
-              target_normed.append(targets[idx].view(-1).long())
-          if args.cuda:
-              targets_var.append(Variable(targets_normed.cuda(non_blocking=True)))
-          else:
-              targets_var.append(Variable(targets_normed))
-
-        # compute output
-        outputs = model(*input_var)
-        losses = 0
-        for idx, output in enumerate(outputs):
+    if i % args.print_freq == 0:
+        for idx, task in enumerate(tasks):
           task_id = f'task_{idx}'
-          target = targets[idx]
-          loss = criterions[idx](output, targets_var[idx])
-
-          # measure accuracy and record loss
-          if tasks[idx] == 'regression':
-              mae_error = mae(normalizer.denorm(output.data.cpu()), target)
-              scores[task_id]['losses'].update(loss.data.cpu(), target.size(0))
-              scores[task_id]['mae_errors'].update(mae_error, target.size(0))
+          if task == 'regression':
+              print('Epoch: [{0}][{1}/{2}]\t'
+                    'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+                    'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
+                    'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
+                    'MAE {mae_errors.val:.3f} ({mae_errors.avg:.3f})'.format(
+                  epoch, i, len(train_loader), batch_time=batch_time,
+                  data_time=data_time, loss=scores[task_id]['losses'], mae_errors=scores[task_id]['mae_errors'])
+              )
           else:
-              accuracy, precision, recall, fscore, auc_score = \
-                  class_eval(output.data.cpu(), target)
-              scores[task_id]['losses'].update(loss.data.cpu().item(), target.size(0))
-              scores[task_id]['accuracies'].update(accuracy, target.size(0))
-              scores[task_id]['precisions'].update(precision, target.size(0))
-              scores[task_id]['recalls'].update(recall, target.size(0))
-              scores[task_id]['fscores'].update(fscore, target.size(0))
-              scores[task_id]['auc_scores'].update(auc_score, target.size(0))
-          losses += loss
-          
-        # compute gradient and do SGD step
-        optimizer.zero_grad()
-        losses.backward()
-        optimizer.step()
-
-        # measure elapsed time
-        batch_time.update(time.time() - end)
-        end = time.time()
-
-        if i % args.print_freq == 0:
-            for idx, task in enumerate(tasks):
-              task_id = f'task_{idx}'
-              if task == 'regression':
-                  print('Epoch: [{0}][{1}/{2}]\t'
-                        'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                        'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
-                        'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-                        'MAE {mae_errors.val:.3f} ({mae_errors.avg:.3f})'.format(
-                      epoch, i, len(train_loader), batch_time=batch_time,
-                      data_time=data_time, loss=scores[task_id]['losses'], mae_errors=scores[task_id]['mae_errors'])
-                  )
-              else:
-                  print('Epoch: [{0}][{1}/{2}]\t'
-                        'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                        'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
-                        'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-                        'Accu {accu.val:.3f} ({accu.avg:.3f})\t'
-                        'Precision {prec.val:.3f} ({prec.avg:.3f})\t'
-                        'Recall {recall.val:.3f} ({recall.avg:.3f})\t'
-                        'F1 {f1.val:.3f} ({f1.avg:.3f})\t'
-                        'AUC {auc.val:.3f} ({auc.avg:.3f})'.format(
-                      epoch, i, len(train_loader), batch_time=scores[task_id]['batch_time'],
-                      data_time=scores[task_id]['data_time'], loss=scores[task_id]['losses'], accu=scores[task_id]['accuracies'],
-                      prec=scores[task_id]['precisions'], recall=scores[task_id]['recalls'], f1=scores[task_id]['fscores'],
-                      auc=scores[task_id]['auc_scores'])
-                  )
+              print('Epoch: [{0}][{1}/{2}]\t'
+                    'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+                    'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
+                    'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
+                    'Accu {accu.val:.3f} ({accu.avg:.3f})\t'
+                    'Precision {prec.val:.3f} ({prec.avg:.3f})\t'
+                    'Recall {recall.val:.3f} ({recall.avg:.3f})\t'
+                    'F1 {f1.val:.3f} ({f1.avg:.3f})\t'
+                    'AUC {auc.val:.3f} ({auc.avg:.3f})'.format(
+                  epoch, i, len(train_loader), batch_time=scores[task_id]['batch_time'],
+                  data_time=scores[task_id]['data_time'], loss=scores[task_id]['losses'], accu=scores[task_id]['accuracies'],
+                  prec=scores[task_id]['precisions'], recall=scores[task_id]['recalls'], f1=scores[task_id]['fscores'],
+                  auc=scores[task_id]['auc_scores'])
+              )
 
 
 def validate(val_loader, model, criterion, normalizer, tasks, test=False):
