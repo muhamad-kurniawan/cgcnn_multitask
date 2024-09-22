@@ -455,8 +455,8 @@ def validate(val_loader, model, criterions, normalizers, tasks, test=False):
                       'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
                       'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
                       'MAE {mae_errors.val:.3f} ({mae_errors.avg:.3f})'.format(
-                  i, len(val_loader), batch_time=batch_time, loss=losses,
-                  mae_errors=mae_errors))
+                  i, len(val_loader), batch_time=batch_time, loss=scores[task_id]['losses'],
+                  mae_errors=scores[task_id]['mae_errors']))
               #         if args.task == 'regression':
               # print('Test: [{0}/{1}]\t'
               #       'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
