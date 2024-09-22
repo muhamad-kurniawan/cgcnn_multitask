@@ -172,7 +172,7 @@ def main():
             best_mae_error = checkpoint['best_mae_error']
             model.load_state_dict(checkpoint['state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer'])
-            normalizer.load_state_dict(checkpoint['normalizer'])
+            normalizers.load_state_dict(checkpoint['normalizer'])
             print("=> loaded checkpoint '{}' (epoch {})"
                   .format(args.resume, checkpoint['epoch']))
         else:
@@ -186,7 +186,7 @@ def main():
         train(train_loader, model, criterions, optimizer, epoch, normalizers, config["tasks"])
 
         # evaluate on validation set
-        mae_error = validate(val_loader, model, criterion, normalizer, tasks=config["tasks"])
+        mae_error = validate(val_loader, model, criterion, normalizers, tasks=config["tasks"])
 
         if mae_error != mae_error:
             print('Exit due to NaN')
@@ -206,7 +206,7 @@ def main():
             'state_dict': model.state_dict(),
             'best_mae_error': best_mae_error,
             'optimizer': optimizer.state_dict(),
-            'normalizer': normalizer.state_dict(),
+            'normalizer': normalizers.state_dict(),
             'args': vars(args)
         }, is_best)
 
@@ -214,7 +214,7 @@ def main():
     print('---------Evaluate Model on Test Set---------------')
     best_checkpoint = torch.load('model_best.pth.tar')
     model.load_state_dict(best_checkpoint['state_dict'])
-    validate(test_loader, model, criterion, normalizer, test=True)
+    validate(test_loader, model, criterion, normalizers, test=True)
 
 def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks):
   batch_time = AverageMeter()
@@ -258,7 +258,7 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks)
     targets_var = []
     for idx, t in enumerate(tasks):
       if t == 'regression':
-          target_normed = normalizer.norm(targets[idx])
+          target_normed = normalizers[idx].norm(targets[idx])
       else:
           target_normed = targets[idx].view(-1).long()
       if args.cuda:
@@ -276,7 +276,7 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks)
 
       # measure accuracy and record loss
       if tasks[idx] == 'regression':
-          mae_error = mae(normalizer.denorm(output.data.cpu()), target)
+          mae_error = mae(normalizers[idx].denorm(output.data.cpu()), target)
           scores[task_id]['losses'].update(loss.data.cpu(), target.size(0))
           scores[task_id]['mae_errors'].update(mae_error, target.size(0))
       else:
@@ -328,7 +328,7 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks)
               )
 
 
-def validate(val_loader, model, criterion, normalizer, tasks, test=False):
+def validate(val_loader, model, criterion, normalizers, tasks, test=False):
   batch_time = AverageMeter()  
   scores = {}
   for t in range(len(tasks)):
@@ -384,7 +384,7 @@ def validate(val_loader, model, criterion, normalizer, tasks, test=False):
       targets_var = []
       for idx, t in enumerate(tasks):
         if t == 'regression':
-            target_normed = normalizer.norm(targets[idx])
+            target_normed = normalizers[idx].norm(targets[idx])
         else:
             target_normed = targets[idx].view(-1).long()
         if args.cuda:
@@ -416,11 +416,11 @@ def validate(val_loader, model, criterion, normalizer, tasks, test=False):
 
         for idx, output in enumerate(outputs):
           if tasks[idx] == 'regression':
-              mae_error = mae(normalizer.denorm(output.data.cpu()), target)
+              mae_error = mae(normalizers[idx].denorm(output.data.cpu()), target)
               scores[task_id]['losses'].update(loss.data.cpu(), target.size(0))
               scores[task_id]['mae_errors'].update(mae_error, target.size(0))
               if test:
-                  test_pred = normalizer.denorm(output.data.cpu())
+                  test_pred = normalizers[idx].denorm(output.data.cpu())
                   test_target = target
                   scores[task_id]['test_preds'] += test_pred.view(-1).tolist()
                   scores[task_id]['test_targets'] += test_target.view(-1).tolist()
