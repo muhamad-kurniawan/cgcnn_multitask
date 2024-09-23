@@ -488,7 +488,7 @@ def validate(val_loader, model, criterions, normalizers, tasks, test=False):
                 writer.writerow((cif_id, target, pred))
     else:
         star_label = '*'
-    if args.task == 'regression':
+    if t == 'regression':
         print(' {star} MAE {mae_errors.avg:.3f}'.format(star=star_label,
                                                         mae_errors=scores[task_id]['mae_errors']))
         return scores[task_id]['mae_errors'].avg
