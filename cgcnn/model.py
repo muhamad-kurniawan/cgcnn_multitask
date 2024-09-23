@@ -346,10 +346,7 @@ class SimpleNetwork(nn.Module):
 
         # Add task-specific activations for classification tasks
         self.softplus = nn.Softplus()  # For regression
-        self.logsoftmax = nn.ModuleList(
-            nn.LogSoftmax(dim=1) if task == 'classification' else nn.Identity()
-            for task in tasks
-        )
+        self.logsoftmax = nn.LogSoftmax(dim=1) if task == 'classification' else nn.Identity()
 
     def forward(self, x: torch.Tensor) -> Sequence[torch.Tensor]:
         """Forward pass through network for multitask learning."""
