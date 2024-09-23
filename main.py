@@ -112,7 +112,7 @@ def main():
         val_size=args.val_size,
         test_size=args.test_size,
         return_test=True)
-
+    print(f'train_loader:{train_loader}')
     # build model
     structures, _, _ = dataset[0]
     orig_atom_fea_len = structures[0].shape[-1]
