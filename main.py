@@ -226,7 +226,7 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks)
     # dict_task['batch_time'] = AverageMeter()
     # dict_task['data_time'] = AverageMeter()
     dict_task['losses'] = AverageMeter()
-    if args.task == 'regression':
+    if tasks[t] == 'regression':
         dict_task['mae_errors'] = AverageMeter()
     else:
         dict_task['accuracies'] = AverageMeter()
@@ -337,7 +337,7 @@ def validate(val_loader, model, criterions, normalizers, tasks, test=False):
     # dict_task['batch_time'] = AverageMeter()
     # dict_task['data_time'] = AverageMeter()
     dict_task['losses'] = AverageMeter()
-    if args.task == 'regression':
+    if tasks[t] == 'regression':
         dict_task['mae_errors'] = AverageMeter()
     else:
         dict_task['accuracies'] = AverageMeter()
