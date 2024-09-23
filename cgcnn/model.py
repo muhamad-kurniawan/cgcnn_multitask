@@ -124,17 +124,27 @@ class CrystalGraphConvNet(nn.Module):
                                       for _ in range(n_h-1)])
             self.acts = nn.ModuleList([nn.ReLU() for _ in range(n_h-1)])
 
+        # self.heads = nn.ModuleList(
+        #     ResidualNetworkOut(
+        #         input_dim=h_fea_len,   # Input from the hidden layer
+        #         output_dim=nodes,        # 2x output for mean and log_std
+        #         hidden_layer_dims=[256, 128],         # Example hidden layers
+        #         activation=nn.ReLU,                # Activation function
+        #         batch_norm=True,                     # Use batch normalization
+        #         task=task
+        #     ) for nodes, task in zip(output_nodes, self.tasks)
+        # )
+        
         self.heads = nn.ModuleList(
-            ResidualNetworkOut(
+            SimpleNetwork(
                 input_dim=h_fea_len,   # Input from the hidden layer
                 output_dim=nodes,        # 2x output for mean and log_std
-                hidden_layer_dims=[256, 128],         # Example hidden layers
-                activation=nn.ReLU,                # Activation function
+                hidden_layer_dims=[256],         # Example hidden layers
+                # activation=nn.ReLU,                # Activation function
                 batch_norm=True,                     # Use batch normalization
                 task=task
             ) for nodes, task in zip(output_nodes, self.tasks)
         )
-        
                      
         # if self.classification:
         #     self.fc_out = nn.Linear(h_fea_len, 2)
@@ -286,3 +296,87 @@ class ResidualNetworkOut(nn.Module):
         output_dim = self.fc_out.out_features
         activation = type(self.acts[0]).__name__
         return f"{type(self).__name__}({input_dim=}, {output_dim=}, {activation=})"
+
+
+class SimpleNetwork(nn.Module):
+    """Simple Feed Forward Neural Network for multitask learning."""
+
+    def __init__(
+        self,
+        input_dim: int,
+        output_dims: Sequence[int],  # output_dims is now a list to handle multiple tasks
+        hidden_layer_dims: Sequence[int],
+        task: str,  # A list of tasks corresponding to output dimensions
+        activation: type[nn.Module] = nn.LeakyReLU,
+        batch_norm: bool = False,
+    ) -> None:
+        """Create a simple feed forward neural network for multitask learning.
+
+        Args:
+            input_dim (int): Number of input features
+            output_dims (list[int]): List of output features for each task
+            hidden_layer_dims (list[int]): List of hidden layer sizes
+            tasks (list[str]): List of tasks ('classification' or 'regression')
+            activation (type[nn.Module], optional): Which activation function to use.
+                Defaults to nn.LeakyReLU.
+            batch_norm (bool, optional): Whether to use batch_norm. Defaults to False.
+        """
+        super().__init__()
+
+        self.task = task
+        self.output_dims = output_dims
+
+        dims = [input_dim, *list(hidden_layer_dims)]
+
+        self.fcs = nn.ModuleList(
+            nn.Linear(dims[idx], dims[idx + 1]) for idx in range(len(dims) - 1)
+        )
+
+        if batch_norm:
+            self.bns = nn.ModuleList(
+                nn.BatchNorm1d(dims[idx + 1]) for idx in range(len(dims) - 1)
+            )
+        else:
+            self.bns = nn.ModuleList(nn.Identity() for _ in range(len(dims) - 1))
+
+        self.acts = nn.ModuleList(activation() for _ in range(len(dims) - 1))
+
+        # Define a separate output layer for each task
+        self.fc_outs = nn.ModuleList(nn.Linear(dims[-1], output_dim) for output_dim in output_dims)
+
+        # Add task-specific activations for classification tasks
+        self.softplus = nn.Softplus()  # For regression
+        self.logsoftmax = nn.ModuleList(
+            nn.LogSoftmax(dim=1) if task == 'classification' else nn.Identity()
+            for task in tasks
+        )
+
+    def forward(self, x: torch.Tensor) -> Sequence[torch.Tensor]:
+        """Forward pass through network for multitask learning."""
+        for fc, bn, act in zip(self.fcs, self.bns, self.acts):
+            x = act(bn(fc(x)))
+
+        # Generate separate outputs for each task
+        outputs = []
+        for fc_out, logsoftmax, task in zip(self.fc_outs, self.logsoftmax, self.tasks):
+            out = fc_out(x)
+            # if task == 'regression':
+            #     out = self.softplus(out)
+        if task == 'classification':
+            out = logsoftmax(out)
+       
+        return out
+
+    def reset_parameters(self) -> None:
+        """Reinitialize network weights using PyTorch defaults."""
+        for fc in self.fcs:
+            fc.reset_parameters()
+
+        for fc_out in self.fc_outs:
+            fc_out.reset_parameters()
+
+    def __repr__(self) -> str:
+        input_dim = self.fcs[0].in_features
+        output_dims = [fc_out.out_features for fc_out in self.fc_outs]
+        activation = type(self.acts[0]).__name__
+        return f"{type(self).__name__}({input_dim=}, {output_dims=}, {activation=})"
