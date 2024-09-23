@@ -303,16 +303,18 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks)
         for idx, task in enumerate(tasks):
           task_id = f'task_{idx}'
           if task == 'regression':
-              print('Epoch: [{0}][{1}/{2}]\t'
+              print('Task_Id: {task_id}\t'
+                    'Epoch: [{0}][{1}/{2}]\t'
                     'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                     'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
                     'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
                     'MAE {mae_errors.val:.3f} ({mae_errors.avg:.3f})'.format(
-                  epoch, i, len(train_loader), batch_time=batch_time,
+                  epoch, i, len(train_loader), task_id=task_id, batch_time=batch_time,
                   data_time=data_time, loss=scores[task_id]['losses'], mae_errors=scores[task_id]['mae_errors'])
               )
           else:
-              print('Epoch: [{0}][{1}/{2}]\t'
+              print('Task_Id: {task_id}\t'
+                'Epoch: [{0}][{1}/{2}]\t'
                     'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                     'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
                     'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
@@ -321,7 +323,7 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks)
                     'Recall {recall.val:.3f} ({recall.avg:.3f})\t'
                     'F1 {f1.val:.3f} ({f1.avg:.3f})\t'
                     'AUC {auc.val:.3f} ({auc.avg:.3f})'.format(
-                  epoch, i, len(train_loader), batch_time=scores[task_id]['batch_time'],
+                  epoch, i, len(train_loader), task_id=task_id, batch_time=scores[task_id]['batch_time'],
                   data_time=scores[task_id]['data_time'], loss=scores[task_id]['losses'], accu=scores[task_id]['accuracies'],
                   prec=scores[task_id]['precisions'], recall=scores[task_id]['recalls'], f1=scores[task_id]['fscores'],
                   auc=scores[task_id]['auc_scores'])
