@@ -297,7 +297,7 @@ class CIFData(Dataset):
     target: torch.Tensor shape (1, )
     cif_id: str or int
     """
-    def __init__(self, root_dir, max_num_nbr=12, radius=8, dmin=0, step=0.2,
+    def __init__(self, root_dir, max_num_nbr=12, radius=10, dmin=0, step=0.2,
                  random_seed=123):
         self.root_dir = root_dir
         self.max_num_nbr, self.radius = max_num_nbr, radius
@@ -331,9 +331,9 @@ class CIFData(Dataset):
         nbr_fea_idx, nbr_fea = [], []
         for nbr in all_nbrs:
             if len(nbr) < self.max_num_nbr:
-                warnings.warn('{} not find enough neighbors to build graph. '
-                              'If it happens frequently, consider increase '
-                              'radius.'.format(cif_id))
+                # warnings.warn('{} not find enough neighbors to build graph. '
+                #               'If it happens frequently, consider increase '
+                #               'radius.'.format(cif_id))
                 nbr_fea_idx.append(list(map(lambda x: x[2], nbr)) +
                                    [0] * (self.max_num_nbr - len(nbr)))
                 nbr_fea.append(list(map(lambda x: x[1], nbr)) +
