@@ -214,7 +214,7 @@ def main():
     print('---------Evaluate Model on Test Set---------------')
     best_checkpoint = torch.load('model_best.pth.tar')
     model.load_state_dict(best_checkpoint['state_dict'])
-    validate(test_loader, model, criterion, normalizers, test=True, tasks=config["tasks"])
+    validate(test_loader, model, criterions, normalizers, test=True, tasks=config["tasks"])
 
 def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks):
   batch_time = AverageMeter()
