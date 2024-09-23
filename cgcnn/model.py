@@ -304,7 +304,7 @@ class SimpleNetwork(nn.Module):
     def __init__(
         self,
         input_dim: int,
-        output_dims: Sequence[int],  # output_dims is now a list to handle multiple tasks
+        output_dim: Sequence[int],  # output_dims is now a list to handle multiple tasks
         hidden_layer_dims: Sequence[int],
         task: str,  # A list of tasks corresponding to output dimensions
         activation: type[nn.Module] = nn.LeakyReLU,
@@ -324,7 +324,7 @@ class SimpleNetwork(nn.Module):
         super().__init__()
 
         self.task = task
-        self.output_dims = output_dims
+        self.output_dim = output_dim
 
         dims = [input_dim, *list(hidden_layer_dims)]
 
@@ -342,7 +342,7 @@ class SimpleNetwork(nn.Module):
         self.acts = nn.ModuleList(activation() for _ in range(len(dims) - 1))
 
         # Define a separate output layer for each task
-        self.fc_outs = nn.ModuleList(nn.Linear(dims[-1], output_dim) for output_dim in output_dims)
+        self.fc_out = nn.Linear(dims[-1], output_dim) 
 
         # Add task-specific activations for classification tasks
         self.softplus = nn.Softplus()  # For regression
@@ -356,10 +356,8 @@ class SimpleNetwork(nn.Module):
         for fc, bn, act in zip(self.fcs, self.bns, self.acts):
             x = act(bn(fc(x)))
 
-        # Generate separate outputs for each task
-        outputs = []
-        for fc_out, logsoftmax, task in zip(self.fc_outs, self.logsoftmax, self.tasks):
-            out = fc_out(x)
+        # Generate separate outputs for each task        
+        out = fc_out(x)
             # if task == 'regression':
             #     out = self.softplus(out)
         if task == 'classification':
