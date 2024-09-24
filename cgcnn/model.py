@@ -195,13 +195,13 @@ class CrystalGraphConvNet(nn.Module):
                 crys_fea = softplus(fc(crys_fea))
         # out = self.fc_out(crys_fea)
 
-        outputs = []
+        # outputs = []
         # for head in self.heads:
             
         #     outputs.append(head(h))
 
-        for head in self.heads:
-            outputs.append(head(crys_fea))
+        # for head in self.heads:
+        #     outputs.append(head(crys_fea))
         
         # if self.classification:
             # out = self.logsoftmax(out)
