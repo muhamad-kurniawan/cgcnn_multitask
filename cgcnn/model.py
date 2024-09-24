@@ -401,7 +401,7 @@ class OutNetwork(nn.Module):
         """
         super().__init__()
 
-        # self.task = task
+        self.task = task
         self.output_dim = output_dim
 
         # dims = [input_dim, *list(hidden_layer_dims)]
