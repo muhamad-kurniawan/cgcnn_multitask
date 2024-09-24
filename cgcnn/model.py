@@ -124,27 +124,27 @@ class CrystalGraphConvNet(nn.Module):
                                       for _ in range(n_h-1)])
             self.acts = nn.ModuleList([nn.ReLU() for _ in range(n_h-1)])
 
-        # self.heads = nn.ModuleList(
-        #     ResidualNetworkOut(
-        #         input_dim=h_fea_len,   # Input from the hidden layer
-        #         output_dim=nodes,        # 2x output for mean and log_std
-        #         hidden_layer_dims=[256, 128],         # Example hidden layers
-        #         activation=nn.ReLU,                # Activation function
-        #         batch_norm=True,                     # Use batch normalization
-        #         task=task
-        #     ) for nodes, task in zip(output_nodes, self.tasks)
-        # )
-        
         self.heads = nn.ModuleList(
-            SimpleNetwork(
+            ResidualNetworkOut(
                 input_dim=h_fea_len,   # Input from the hidden layer
                 output_dim=nodes,        # 2x output for mean and log_std
-                hidden_layer_dims=[256],         # Example hidden layers
-                # activation=nn.ReLU,                # Activation function
+                hidden_layer_dims=[256, 128],         # Example hidden layers
+                activation=nn.ReLU,                # Activation function
                 batch_norm=True,                     # Use batch normalization
                 task=task
             ) for nodes, task in zip(output_nodes, self.tasks)
         )
+        
+        # self.heads = nn.ModuleList(
+        #     SimpleNetwork(
+        #         input_dim=h_fea_len,   # Input from the hidden layer
+        #         output_dim=nodes,        # 2x output for mean and log_std
+        #         hidden_layer_dims=[256],         # Example hidden layers
+        #         # activation=nn.ReLU,                # Activation function
+        #         batch_norm=True,                     # Use batch normalization
+        #         task=task
+        #     ) for nodes, task in zip(output_nodes, self.tasks)
+        # )
                      
         # if self.classification:
         #     self.fc_out = nn.Linear(h_fea_len, 2)
