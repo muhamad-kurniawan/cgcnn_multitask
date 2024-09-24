@@ -205,7 +205,7 @@ class CrystalGraphConvNet(nn.Module):
         
         # if self.classification:
             # out = self.logsoftmax(out)
-        return outputs
+        return tuple(outputs.append(head(crys_fea)) for head in self.heads)
 
     def pooling(self, atom_fea, crystal_atom_idx):
         """
