@@ -150,8 +150,8 @@ def main():
               sample_data_list = [dataset[i] for i in
                                   sample(range(len(dataset)), 500)]
           _, sample_target, _ = collate_pool(sample_data_list)
-          normalizer = Normalizer(sample_target)
-          normalizers.append(normalizer)
+          normalizers = [Normalizer(s) for s in sample_target]
+          # normalizers.append(normalizers_)
     
     if args.optim == 'SGD':
         optimizer = optim.SGD(model.parameters(), args.lr,
