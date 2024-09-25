@@ -50,6 +50,8 @@ parser.add_argument('--print-freq', '-p', default=10, type=int,
                     metavar='N', help='print frequency (default: 10)')
 parser.add_argument('--resume', default='', type=str, metavar='PATH',
                     help='path to latest checkpoint (default: none)')
+parser.add_argument('--transfer', default='', type=str, metavar='PATH',
+                    help='path to latest checkpoint (default: none)')
 train_group = parser.add_mutually_exclusive_group()
 train_group.add_argument('--train-ratio', default=None, type=float, metavar='N',
                     help='number of training data to be loaded (default none)')
@@ -177,6 +179,36 @@ def main():
                   .format(args.resume, checkpoint['epoch']))
         else:
             print("=> no checkpoint found at '{}'".format(args.resume))
+    if args.transfer:
+        if os.path.isfile(args.transfer):
+            print("=> loading checkpoint '{}'".format(args.transfer))
+            checkpoint = torch.load(args.transfer)
+            args.start_epoch = checkpoint['epoch']
+            best_mae_error = checkpoint['best_mae_error']
+            # model.load_state_dict(checkpoint['state_dict'])
+            optimizer.load_state_dict(checkpoint['optimizer'])
+            normalizers = [norm.load_state_dict(checkpoint['normalizers'][i]) for i, norm in enumerate(normalizers)]
+
+            model_dict = model.state_dict()
+            pretrained_dict = {}
+            for k, v in checkpoint['state_dict'].items():
+                if k in model_dict:
+                    if v.shape == model_dict[k].shape:
+                        pretrained_dict[k] = v
+                    else:
+                        print(f"Shape mismatch for layer {k}: "
+                              f"pretrained shape {v.shape} vs model shape {model_dict[k].shape}")
+                else:
+                    print(f"Layer {k} not found in model")
+        
+            # print(f'dict_val:{list(pretrained_dict.values())}')
+            model_dict.update(pretrained_dict)
+            model.load_state_dict(model_dict)
+          
+            print("=> loaded checkpoint '{}' (epoch {})"
+                  .format(args.transfer, checkpoint['epoch']))
+        else:
+            print("=> no checkpoint found at '{}'".format(args.transfer))
 
     scheduler = MultiStepLR(optimizer, milestones=args.lr_milestones,
                             gamma=0.1)
