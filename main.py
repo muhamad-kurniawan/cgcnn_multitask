@@ -133,7 +133,7 @@ def main():
     # obtain target value normalizer
     criterions = []
     normalizers = []
-    for task in config["tasks"]:
+    for idx, task in enumerate(config["tasks"]):
       # define loss func and optimizer
       if task == 'classification':
           criterions.append(nn.NLLLoss())
@@ -150,7 +150,7 @@ def main():
               sample_data_list = [dataset[i] for i in
                                   sample(range(len(dataset)), 500)]
           _, sample_target, _ = collate_pool(sample_data_list)
-          normalizers = [Normalizer(s) for s in sample_target]
+          normalizers.append(Normalizer(sample_target[idx]))
           # normalizers.append(normalizers_)
     
     if args.optim == 'SGD':
