@@ -587,7 +587,7 @@ def class_eval(prediction, target):
     precision, recall, fscore, _ = metrics.precision_recall_fscore_support(
             target_label, pred_label)
     # auc_score = metrics.roc_auc_score(target_label, prediction[:, 1])
-    auc_score = metrics.roc_auc_score(target_label, prediction)
+    auc_score = metrics.roc_auc_score(target_label, prediction, multi_class='ovo')
     accuracy = metrics.accuracy_score(target_label, pred_label)
     # else:
     #     raise NotImplementedError
