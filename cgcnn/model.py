@@ -117,34 +117,35 @@ class CrystalGraphConvNet(nn.Module):
         #     self.softpluses = nn.ModuleList([nn.Softplus()
         #                                      for _ in range(n_h-1)])
 
-        self.activation = nn.ReLU()
-
+        # self.activation = nn.ReLU()
+        self.activation = nn.Softplus()
+                     
         if n_h > 1:
             self.fcs = nn.ModuleList([nn.Linear(h_fea_len, h_fea_len)
                                       for _ in range(n_h-1)])
-            self.acts = nn.ModuleList([nn.ReLU() for _ in range(n_h-1)])
+            self.acts = nn.ModuleList([nn.Softplus() for _ in range(n_h-1)])
 
-        # self.heads = nn.ModuleList(
-        #     ResidualNetworkOut(
-        #         input_dim=h_fea_len,   # Input from the hidden layer
-        #         output_dim=nodes,        # 2x output for mean and log_std
-        #         hidden_layer_dims=[256, 128],         # Example hidden layers
-        #         activation=nn.ReLU,                # Activation function
-        #         batch_norm=True,                     # Use batch normalization
-        #         task=task
-        #     ) for nodes, task in zip(output_nodes, self.tasks)
-        # )
-        
         self.heads = nn.ModuleList(
-            OutNetwork(
+            ResidualNetworkOut(
                 input_dim=h_fea_len,   # Input from the hidden layer
                 output_dim=nodes,        # 2x output for mean and log_std
-                hidden_layer_dims=[256],         # Example hidden layers
-                # activation=nn.ReLU,                # Activation function
+                hidden_layer_dims=[256, 128],         # Example hidden layers
+                activation=nn.Softplus,                # Activation function
                 batch_norm=True,                     # Use batch normalization
                 task=task
             ) for nodes, task in zip(output_nodes, self.tasks)
         )
+        
+        # self.heads = nn.ModuleList(
+        #     OutNetwork(
+        #         input_dim=h_fea_len,   # Input from the hidden layer
+        #         output_dim=nodes,        # 2x output for mean and log_std
+        #         hidden_layer_dims=[256],         # Example hidden layers
+        #         # activation=nn.ReLU,                # Activation function
+        #         batch_norm=True,                     # Use batch normalization
+        #         task=task
+        #     ) for nodes, task in zip(output_nodes, self.tasks)
+        # )
                      
         # if self.classification:
         #     self.fc_out = nn.Linear(h_fea_len, 2)
