@@ -581,13 +581,16 @@ def class_eval(prediction, target):
     target_label = np.squeeze(target)
     if not target_label.shape:
         target_label = np.asarray([target_label])
-    if prediction.shape[1] == 2:
-        precision, recall, fscore, _ = metrics.precision_recall_fscore_support(
+    # if prediction.shape[1] == 2:
+        # precision, recall, fscore, _ = metrics.precision_recall_fscore_support(
+        #     target_label, pred_label, average='binary')
+    precision, recall, fscore, _ = metrics.precision_recall_fscore_support(
             target_label, pred_label, average='binary')
-        auc_score = metrics.roc_auc_score(target_label, prediction[:, 1])
-        accuracy = metrics.accuracy_score(target_label, pred_label)
-    else:
-        raise NotImplementedError
+    # auc_score = metrics.roc_auc_score(target_label, prediction[:, 1])
+    auc_score = metrics.roc_auc_score(target_label, prediction)
+    accuracy = metrics.accuracy_score(target_label, pred_label)
+    # else:
+    #     raise NotImplementedError
     return accuracy, precision, recall, fscore, auc_score
 
 
