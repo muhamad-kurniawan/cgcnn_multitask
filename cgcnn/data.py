@@ -147,8 +147,10 @@ def collate_pool(dataset_list):
             torch.cat(batch_nbr_fea, dim=0),
             torch.cat(batch_nbr_fea_idx, dim=0),
             crystal_atom_idx),\
-        torch.stack(batch_target, dim=0),\
+        tuple(torch.stack(b_target, dim=0) for b_target in zip(*batch_target)),\
         batch_cif_ids
+        # torch.stack(batch_target, dim=0),\
+        # batch_cif_ids
 
 
 class GaussianDistance(object):
@@ -349,5 +351,5 @@ class CIFData(Dataset):
         atom_fea = torch.Tensor(atom_fea)
         nbr_fea = torch.Tensor(nbr_fea)
         nbr_fea_idx = torch.LongTensor(nbr_fea_idx)
-        target = torch.Tensor([float(t) for t in target])
+        target = [torch.Tensor([float(t)]) for t in target]
         return (atom_fea, nbr_fea, nbr_fea_idx), target, cif_id
