@@ -420,6 +420,8 @@ def validate(val_loader, model, criterions, normalizers, tasks, test=False):
                            input[3])
 
       targets_var = []
+      print(normalizers)
+      print(len(normalizers))
       for idx, t in enumerate(tasks):
         if t == 'regression':
             target_normed = normalizers[idx].norm(targets[idx])
