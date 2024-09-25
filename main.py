@@ -350,7 +350,7 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks)
               )
           else:
               print('Task_Id: {task_id}\t'
-                'Epoch: [{0}][{1}/{2}]\t'
+                    'Epoch: [{0}][{1}/{2}]\t'
                     'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                     'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
                     'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
