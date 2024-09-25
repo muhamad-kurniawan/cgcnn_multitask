@@ -129,6 +129,10 @@ def main():
                                 #                        'classification' else False
                                 tasks=config["tasks"]
                                )
+  
+    total_params = sum(p.numel() for p in model.parameters())
+    print(f'total_model_params:{total_params}')
+  
     if args.cuda:
         model.cuda()
 
