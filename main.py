@@ -359,8 +359,8 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks)
                     'Recall {recall.val:.3f} ({recall.avg:.3f})\t'
                     'F1 {f1.val:.3f} ({f1.avg:.3f})\t'
                     'AUC {auc.val:.3f} ({auc.avg:.3f})'.format(
-                  epoch, i, len(train_loader), task_id=task_id, batch_time=scores[task_id]['batch_time'],
-                  data_time=scores[task_id]['data_time'], loss=scores[task_id]['losses'], accu=scores[task_id]['accuracies'],
+                  epoch, i, len(train_loader), task_id=task_id, batch_time=batch_time,
+                  data_time=data_time, loss=scores[task_id]['losses'], accu=scores[task_id]['accuracies'],
                   prec=scores[task_id]['precisions'], recall=scores[task_id]['recalls'], f1=scores[task_id]['fscores'],
                   auc=scores[task_id]['auc_scores'])
               )
