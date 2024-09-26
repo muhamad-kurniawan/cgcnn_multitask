@@ -100,7 +100,6 @@ def main():
     with open(config_file) as f:
         config = json.load(f)
     dataset = CIFData(*args.data_options, config=config)
-    dataset = dataset[-1000:]
     collate_fn = collate_pool
     train_loader, val_loader, test_loader = get_train_val_test_loader(
         dataset=dataset,
