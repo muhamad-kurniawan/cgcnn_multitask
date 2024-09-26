@@ -146,7 +146,7 @@ def main():
           normalizer = Normalizer(torch.zeros(2))
           normalizer.load_state_dict({'mean': 0., 'std': 1.})
           normalizers.append(normalizer)
-          normalizers.append(None)
+          # normalizers.append(None)
       else:
           criterions.append(nn.MSELoss())
           if len(dataset) < 500:
