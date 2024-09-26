@@ -278,6 +278,8 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks)
 
   end = time.time()
   for i, (input, targets, _) in enumerate(train_loader):
+    if i<len(train_loader)-3:
+      pass
     # measure data loading time
     data_time.update(time.time() - end)
 
