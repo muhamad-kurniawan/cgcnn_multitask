@@ -99,7 +99,7 @@ def main():
     config_file = args.data_options[0] + '/config.json'
     with open(config_file) as f:
         config = json.load(f)
-    dataset = CIFData(*args.data_options)
+    dataset = CIFData(*args.data_options, config=config)
     collate_fn = collate_pool
     train_loader, val_loader, test_loader = get_train_val_test_loader(
         dataset=dataset,
