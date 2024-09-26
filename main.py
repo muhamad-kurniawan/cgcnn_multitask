@@ -586,6 +586,8 @@ def class_eval(prediction, target):
     # if prediction.shape[1] == 2:
         # precision, recall, fscore, _ = metrics.precision_recall_fscore_support(
         #     target_label, pred_label, average='binary')
+    print(f'target:{target_label[:5]}')
+    print(f'pred:{pred_label[:5]}')
     precision, recall, fscore, _ = metrics.precision_recall_fscore_support(
             target_label, pred_label)
     # auc_score = metrics.roc_auc_score(target_label, prediction[:, 1])
