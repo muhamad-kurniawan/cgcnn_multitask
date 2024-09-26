@@ -219,6 +219,7 @@ def main():
                             gamma=0.1)
 
     for epoch in range(args.start_epoch, args.epochs):
+        print(f'start epoch {epoch}')
         # train for one epoch
         train(train_loader, model, criterions, optimizer, epoch, normalizers, config["tasks"])
 
