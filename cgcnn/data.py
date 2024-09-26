@@ -299,9 +299,10 @@ class CIFData(Dataset):
     target: torch.Tensor shape (1, )
     cif_id: str or int
     """
-    def __init__(self, root_dir, max_num_nbr=12, radius=10, dmin=0, step=0.2,
+    def __init__(self, root_dir, config, max_num_nbr=12, radius=10, dmin=0, step=0.2,
                  random_seed=123):
         self.root_dir = root_dir
+        self.config = config
         self.max_num_nbr, self.radius = max_num_nbr, radius
         assert os.path.exists(root_dir), 'root_dir does not exist!'
         id_prop_file = os.path.join(self.root_dir, 'id_prop.csv')
@@ -351,6 +352,13 @@ class CIFData(Dataset):
         atom_fea = torch.Tensor(atom_fea)
         nbr_fea = torch.Tensor(nbr_fea)
         nbr_fea_idx = torch.LongTensor(nbr_fea_idx)
-          
-        target = [torch.Tensor([float(t)]) for t in target]
+        target = []
+        for t in self.config['tasks']:
+          if t == 'regression':
+            target.append(torch.Tensor([float(t)])
+          else:
+            try:
+              target.append(torch.LongTensor([int(t)])
+            except:
+              print(cif_id, ' label failed to convert to int')
         return (atom_fea, nbr_fea, nbr_fea_idx), target, cif_id
