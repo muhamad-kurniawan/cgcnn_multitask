@@ -352,13 +352,13 @@ class CIFData(Dataset):
         atom_fea = torch.Tensor(atom_fea)
         nbr_fea = torch.Tensor(nbr_fea)
         nbr_fea_idx = torch.LongTensor(nbr_fea_idx)
-        target = []
-        for t in self.config['tasks']:
+        targets = []
+        for idx, t in enumerate(self.config['tasks']):
           if t == 'regression':
-            target.append(torch.Tensor([float(t)]))
+            target.append(torch.Tensor([float(target[idx])]))
           else:
             try:
-              target.append(torch.LongTensor([int(t)]))
+              target.append(torch.LongTensor([int(target[idx])]))
             except:
               print(cif_id, ' label failed to convert to int')
         return (atom_fea, nbr_fea, nbr_fea_idx), target, cif_id
