@@ -100,6 +100,7 @@ def main():
     with open(config_file) as f:
         config = json.load(f)
     dataset = CIFData(*args.data_options, config=config)
+    dataset = dataset[-1000:]
     collate_fn = collate_pool
     train_loader, val_loader, test_loader = get_train_val_test_loader(
         dataset=dataset,
@@ -278,6 +279,7 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks)
   model.train()
 
   end = time.time()
+  print('start train_loader')
   for i, (input, targets, _) in enumerate(train_loader):
     if i>len(train_loader)-3:
       print(f'index i:{i}')
