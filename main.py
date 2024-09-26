@@ -146,6 +146,7 @@ def main():
           normalizer = Normalizer(torch.zeros(2))
           normalizer.load_state_dict({'mean': 0., 'std': 1.})
           normalizers.append(normalizer)
+          normalizers.append(None)
       else:
           criterions.append(nn.MSELoss())
           if len(dataset) < 500:
@@ -543,6 +544,7 @@ class Normalizer(object):
 
     def __init__(self, tensor):
         """tensor is taken as a sample to calculate the mean and std"""
+      
         self.mean = torch.mean(tensor)
         self.std = torch.std(tensor)
 
