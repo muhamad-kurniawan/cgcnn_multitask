@@ -358,7 +358,7 @@ class CIFData(Dataset):
             target.append(torch.Tensor([float(t)]))
           else:
             try:
-              target.append(torch.LongTensor([int(t)])
+              target.append(torch.LongTensor([int(t)]))
             except:
               print(cif_id, ' label failed to convert to int')
         return (atom_fea, nbr_fea, nbr_fea_idx), target, cif_id
