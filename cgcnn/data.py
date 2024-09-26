@@ -351,5 +351,10 @@ class CIFData(Dataset):
         atom_fea = torch.Tensor(atom_fea)
         nbr_fea = torch.Tensor(nbr_fea)
         nbr_fea_idx = torch.LongTensor(nbr_fea_idx)
+      
+        text_file = open("/content/t.txt", "w")
+        n = text_file.write(target[2])
+        text_file.close()
+      
         target = [torch.Tensor([float(t)]) for t in target]
         return (atom_fea, nbr_fea, nbr_fea_idx), target, cif_id
