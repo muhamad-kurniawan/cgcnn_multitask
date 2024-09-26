@@ -355,7 +355,7 @@ class CIFData(Dataset):
         target = []
         for t in self.config['tasks']:
           if t == 'regression':
-            target.append(torch.Tensor([float(t)])
+            target.append(torch.Tensor([float(t)]))
           else:
             try:
               target.append(torch.LongTensor([int(t)])
