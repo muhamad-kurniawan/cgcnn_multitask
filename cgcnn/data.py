@@ -361,4 +361,4 @@ class CIFData(Dataset):
               targets.append(torch.LongTensor([int(target[idx])]))
             except:
               print(cif_id, ' label failed to convert to int')
-        return (atom_fea, nbr_fea, nbr_fea_idx), target, cif_id
+        return (atom_fea, nbr_fea, nbr_fea_idx), targets, cif_id
