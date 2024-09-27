@@ -281,6 +281,8 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks)
   print('start train_loader')
   for i, (input, targets, _) in enumerate(train_loader):
     print(f'index i:{i}')
+  for i, (input, targets, _) in enumerate(train_loader):
+    print(f'index i:{i}')
 
     # measure data loading time
     data_time.update(time.time() - end)
@@ -310,12 +312,13 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks)
     # compute output
     outputs = model(*input_var)
     losses = 0
+    target_task_class = [t[2] for t in targets]
+    if os.path.exists("/content/target.txt"):
+      os.remove("/content/target.txt")
+    with open('/content/target.txt', 'a') as f:
+      f.write(str(targets))
     for idx, output in enumerate(outputs):
-      target_task_class = [t[2] for t in targets]
-      if os.path.exists("/content/target.txt"):
-        os.remove("/content/target.txt")
-      with open('/content/target.txt', 'a') as f:
-        f.write(str(targets[0]))
+
       task_id = f'task_{idx}'
       target = targets[idx]
       loss = criterions[idx](output, targets_var[idx])
