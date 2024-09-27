@@ -312,7 +312,7 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks)
     losses = 0
     for idx, output in enumerate(outputs):
       with open('/content/target.txt', 'a') as f:
-        f.write(targets)
+        f.write(str(targets))
       task_id = f'task_{idx}'
       target = targets[idx]
       loss = criterions[idx](output, targets_var[idx])
