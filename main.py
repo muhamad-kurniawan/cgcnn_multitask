@@ -494,11 +494,11 @@ def validate(val_loader, model, criterions, normalizers, tasks, test=False):
                   scores[task_id]['test_cif_ids'] += batch_cif_ids
           else:
               for n in target.numpy():
-              try:
-                int(n)
-              except:
-                print('class target is not int')
-              error_target = True
+                try:
+                  int(n)
+                except:
+                  print('class target is not int')
+                error_target = True
               if error_target == False:
                 accuracy, precision, recall, fscore, auc_score = \
                     class_eval(output.data.cpu(), target)
