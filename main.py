@@ -283,6 +283,9 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks)
   #   print(f'index i:{i}')
   for i, (input, targets, _) in enumerate(train_loader):
     print(f'index i:{i}')
+    # for t_c in targets[2]:
+    #   try:
+        
 
     # measure data loading time
     data_time.update(time.time() - end)
@@ -310,6 +313,7 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks)
           targets_var.append(Variable(target_normed))
 
     # compute output
+    error_target = False
     outputs = model(*input_var)
     losses = 0
     target_task_class = [t[2] for t in targets]
@@ -329,26 +333,35 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks)
           scores[task_id]['losses'].update(loss.data.cpu(), target.size(0))
           scores[task_id]['mae_errors'].update(mae_error, target.size(0))
       else:
-          accuracy, precision, recall, fscore, auc_score = \
-              class_eval(output.data.cpu(), target)
-          scores[task_id]['losses'].update(loss.data.cpu().item(), target.size(0))
-          scores[task_id]['accuracies'].update(accuracy, target.size(0))
-          scores[task_id]['precisions'].update(precision, target.size(0))
-          scores[task_id]['recalls'].update(recall, target.size(0))
-          scores[task_id]['fscores'].update(fscore, target.size(0))
-          scores[task_id]['auc_scores'].update(auc_score, target.size(0))
+          for n in target.numpy():
+            try:
+              int(n)
+            except:
+              print('class target is not int')
+              error_target = True
+          if error_target==False:
+            accuracy, precision, recall, fscore, auc_score = \
+                class_eval(output.data.cpu(), target)
+            scores[task_id]['losses'].update(loss.data.cpu().item(), target.size(0))
+            scores[task_id]['accuracies'].update(accuracy, target.size(0))
+            scores[task_id]['precisions'].update(precision, target.size(0))
+            scores[task_id]['recalls'].update(recall, target.size(0))
+            scores[task_id]['fscores'].update(fscore, target.size(0))
+            scores[task_id]['auc_scores'].update(auc_score, target.size(0))
       losses += loss
       
     # compute gradient and do SGD step
     optimizer.zero_grad()
-    losses.backward()
-    optimizer.step()
+    if error_target==False:
+      losses.backward()
+      optimizer.step()
 
     # measure elapsed time
     batch_time.update(time.time() - end)
     end = time.time()
 
     if i % args.print_freq == 0:
+      if error_target==False:
         for idx, task in enumerate(tasks):
           task_id = f'task_{idx}'
           if task == 'regression':
