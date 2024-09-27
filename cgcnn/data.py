@@ -143,12 +143,17 @@ def collate_pool(dataset_list):
         batch_target.append(target)
         batch_cif_ids.append(cif_id)
         base_idx += n_i
+
+    stacked_targets = tuple(torch.stack([t[i] for t in batch_target], dim=0) for i in range(len(batch_target[0])))
+
     return (torch.cat(batch_atom_fea, dim=0),
             torch.cat(batch_nbr_fea, dim=0),
             torch.cat(batch_nbr_fea_idx, dim=0),
             crystal_atom_idx),\
-        tuple(torch.stack(b_target, dim=0) for b_target in zip(*batch_target)),\
+        stacked_targets,
         batch_cif_ids
+        # tuple(torch.stack(b_target, dim=0) for b_target in zip(*batch_target)),\
+        # batch_cif_ids
         # torch.stack(batch_target, dim=0),\
         # batch_cif_ids
 
