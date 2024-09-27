@@ -279,8 +279,8 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks)
 
   end = time.time()
   print('start train_loader')
-  for i, (input, targets, _) in enumerate(train_loader):
-    print(f'index i:{i}')
+  # for i, (input, targets, _) in enumerate(train_loader):
+  #   print(f'index i:{i}')
   for i, (input, targets, _) in enumerate(train_loader):
     print(f'index i:{i}')
 
