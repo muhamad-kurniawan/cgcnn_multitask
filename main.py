@@ -573,7 +573,7 @@ def validate(val_loader, model, criterions, normalizers, tasks, test=False):
     #     print(' {star} AUC {auc.avg:.3f}'.format(star=star_label,
     #                                              auc=auc_scores[idx]))
     #     return scores[task_id]['auc_scores'].avg
-    return total_losses
+  return total_loss
 
 
 class Normalizer(object):
