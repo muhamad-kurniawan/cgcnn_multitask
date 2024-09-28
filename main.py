@@ -472,11 +472,13 @@ def validate(val_loader, model, criterions, normalizers, tasks, test=False):
       error_target = False
       # compute output
       outputs = model(*input_var)
-      losses = 0
+      total_loss = 0
       for idx, output in enumerate(outputs):
         task_id = f'task_{idx}'
         target = targets[idx]
         loss = criterions[idx](output, targets_var[idx])
+        total_loss += loss.item() * target.size(0)
+        print(f'task_id: losses:{loss}')
         # loss = criterion(output, target_var)
 
         # measure accuracy and record loss
@@ -484,7 +486,7 @@ def validate(val_loader, model, criterions, normalizers, tasks, test=False):
         if tasks[idx] == 'regression':
             mae_error = mae(normalizers[idx].denorm(output.data.cpu()), target)
             scores[task_id]['losses'].update(loss.data.cpu(), target.size(0))
-            scores[task_id]['mae_errors'].update(mae_error, target.size(0))
+            # scores[task_id]['mae_errors'].update(mae_error, target.size(0))
             if test:
                 test_pred = normalizers[idx].denorm(output.data.cpu())
                 test_target = target
@@ -562,14 +564,16 @@ def validate(val_loader, model, criterions, normalizers, tasks, test=False):
                 writer.writerow((cif_id, target, pred))
     else:
         star_label = '*'
-    if t == 'regression':
-        print(' {star} MAE {mae_errors.avg:.3f}'.format(star=star_label,
-                                                        mae_errors=scores[task_id]['mae_errors']))
-        return scores[task_id]['mae_errors'].avg
-    else:
-        print(' {star} AUC {auc.avg:.3f}'.format(star=star_label,
-                                                 auc=auc_scores[idx]))
-        return scores[task_id]['auc_scores'].avg
+    # if t == 'regression':
+    #     print(' {star} MAE {mae_errors.avg:.3f}'.format(star=star_label,
+    #                                                     mae_errors=scores[task_id]['mae_errors']))
+    #     return scores[task_id]['mae_errors'].avg
+      
+    # else:
+    #     print(' {star} AUC {auc.avg:.3f}'.format(star=star_label,
+    #                                              auc=auc_scores[idx]))
+    #     return scores[task_id]['auc_scores'].avg
+    return total_losses
 
 
 class Normalizer(object):
