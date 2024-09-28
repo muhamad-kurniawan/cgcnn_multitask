@@ -317,10 +317,10 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks)
     outputs = model(*input_var)
     losses = 0
     target_task_class = [t[2] for t in targets]
-    if os.path.exists("/content/target.txt"):
-      os.remove("/content/target.txt")
-    with open('/content/target.txt', 'a') as f:
-      f.write(str(targets))
+    # if os.path.exists("/content/target.txt"):
+    #   os.remove("/content/target.txt")
+    # with open('/content/target.txt', 'a') as f:
+    #   f.write(str(targets))
     for idx, output in enumerate(outputs):
 
       task_id = f'task_{idx}'
