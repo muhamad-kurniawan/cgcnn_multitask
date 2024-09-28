@@ -481,40 +481,39 @@ def validate(val_loader, model, criterions, normalizers, tasks, test=False):
 
         # measure accuracy and record loss
 
-        for idx, output in enumerate(outputs):
-          if tasks[idx] == 'regression':
-              mae_error = mae(normalizers[idx].denorm(output.data.cpu()), target)
-              scores[task_id]['losses'].update(loss.data.cpu(), target.size(0))
-              scores[task_id]['mae_errors'].update(mae_error, target.size(0))
+        if tasks[idx] == 'regression':
+            mae_error = mae(normalizers[idx].denorm(output.data.cpu()), target)
+            scores[task_id]['losses'].update(loss.data.cpu(), target.size(0))
+            scores[task_id]['mae_errors'].update(mae_error, target.size(0))
+            if test:
+                test_pred = normalizers[idx].denorm(output.data.cpu())
+                test_target = target
+                scores[task_id]['test_preds'] += test_pred.view(-1).tolist()
+                scores[task_id]['test_targets'] += test_target.view(-1).tolist()
+                scores[task_id]['test_cif_ids'] += batch_cif_ids
+        else:
+            for n in target.numpy():
+              try:
+                int(n)
+              except:
+                print('class target is not int')
+              error_target = True
+            if error_target == False:
+              accuracy, precision, recall, fscore, auc_score = \
+                  class_eval(output.data.cpu(), target)
+              scores[task_id]['losses'].update(loss.data.cpu().item(), target.size(0))
+              scores[task_id]['accuracies'].update(accuracy, target.size(0))
+              scores[task_id]['precisions'].update(precision, target.size(0))
+              scores[task_id]['recalls'].update(recall, target.size(0))
+              scores[task_id]['fscores'].update(fscore, target.size(0))
+              scores[task_id]['auc_scores'].update(auc_score, target.size(0))
               if test:
-                  test_pred = normalizers[idx].denorm(output.data.cpu())
+                  test_pred = torch.exp(output.data.cpu())
                   test_target = target
-                  scores[task_id]['test_preds'] += test_pred.view(-1).tolist()
+                  assert test_pred.shape[1] == 2
+                  scores[task_id]['test_preds'] += test_pred[:, 1].tolist()
                   scores[task_id]['test_targets'] += test_target.view(-1).tolist()
                   scores[task_id]['test_cif_ids'] += batch_cif_ids
-          else:
-              for n in target.numpy():
-                try:
-                  int(n)
-                except:
-                  print('class target is not int')
-                error_target = True
-              if error_target == False:
-                accuracy, precision, recall, fscore, auc_score = \
-                    class_eval(output.data.cpu(), target)
-                scores[task_id]['losses'].update(loss.data.cpu().item(), target.size(0))
-                scores[task_id]['accuracies'].update(accuracy, target.size(0))
-                scores[task_id]['precisions'].update(precision, target.size(0))
-                scores[task_id]['recalls'].update(recall, target.size(0))
-                scores[task_id]['fscores'].update(fscore, target.size(0))
-                scores[task_id]['auc_scores'].update(auc_score, target.size(0))
-                if test:
-                    test_pred = torch.exp(output.data.cpu())
-                    test_target = target
-                    assert test_pred.shape[1] == 2
-                    scores[task_id]['test_preds'] += test_pred[:, 1].tolist()
-                    scores[task_id]['test_targets'] += test_target.view(-1).tolist()
-                    scores[task_id]['test_cif_ids'] += batch_cif_ids
 
       # measure elapsed time
       batch_time.update(time.time() - end)
