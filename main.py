@@ -192,7 +192,7 @@ def main():
             best_mae_error = checkpoint['best_mae_error']
             # model.load_state_dict(checkpoint['state_dict'])
             optimizer.load_state_dict(checkpoint['optimizer'])
-            normalizers = [norma.load_state_dict(checkpoint['normalizers'][i]) for i, norma in enumerate(normalizers)]
+            # normalizers = [norma.load_state_dict(checkpoint['normalizers'][i]) for i, norma in enumerate(normalizers)]
 
             model_dict = model.state_dict()
             pretrained_dict = {}
