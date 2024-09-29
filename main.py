@@ -218,12 +218,13 @@ def train(train_loader, model, criterion, optimizer, epoch, normalizer):
         recalls = AverageMeter()
         fscores = AverageMeter()
         auc_scores = AverageMeter()
+    embedding_dict = {}
 
     # switch to train mode
     model.train()
 
     end = time.time()
-    for i, (input, target, _) in enumerate(train_loader):
+    for i, (input, target, cif_id) in enumerate(train_loader):
         # measure data loading time
         data_time.update(time.time() - end)
 
@@ -248,7 +249,7 @@ def train(train_loader, model, criterion, optimizer, epoch, normalizer):
             target_var = Variable(target_normed)
 
         # compute output
-        output = model(*input_var)
+        output, embedding = model(*input_var)
         loss = criterion(output, target_var)
 
         # measure accuracy and record loss
@@ -274,6 +275,12 @@ def train(train_loader, model, criterion, optimizer, epoch, normalizer):
         # measure elapsed time
         batch_time.update(time.time() - end)
         end = time.time()
+
+        embedding = embedding.cpu().numpy().tolist()
+        for idx, cid in enumerate(cif_id):
+          embedding_dict[cif_id] = embedding[idx]
+        with open('embeddings_train.json', 'w') as f:
+          json.dump(embedding_dict, f)
 
         if i % args.print_freq == 0:
             if args.task == 'regression':
@@ -317,7 +324,7 @@ def validate(val_loader, model, criterion, normalizer, test=False):
         test_targets = []
         test_preds = []
         test_cif_ids = []
-
+    embedding_dict = {}
     # switch to evaluate mode
     model.eval()
 
@@ -347,7 +354,7 @@ def validate(val_loader, model, criterion, normalizer, test=False):
                 target_var = Variable(target_normed)
 
         # compute output
-        output = model(*input_var)
+        output, embedding = model(*input_var)
         loss = criterion(output, target_var)
 
         # measure accuracy and record loss
@@ -381,6 +388,11 @@ def validate(val_loader, model, criterion, normalizer, test=False):
         # measure elapsed time
         batch_time.update(time.time() - end)
         end = time.time()
+        embedding = embedding.cpu().numpy().tolist()
+        for idx, cid in enumerate(cif_id):
+          embedding_dict[cif_id] = embedding[idx]
+        with open('embeddings_val.json', 'w') as f:
+          json.dump(embedding_dict, f)
 
         if i % args.print_freq == 0:
             if args.task == 'regression':
