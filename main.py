@@ -361,10 +361,11 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks)
     batch_time.update(time.time() - end)
     end = time.time()
     embedding = embedding.cpu().numpy().tolist()
-    for idx_, cid in enumerate(cif_id):
-      embedding_dict[cid] = embedding [idx_]
-    with open('embeddings.json', 'w') as f:
-      json.dump(embedding_dict, f)
+    if epoch%50==0:
+      for idx_, cid in enumerate(cif_id):
+        embedding_dict[cid] = embedding [idx_]
+      with open('embeddings.json', 'w') as f:
+        json.dump(embedding_dict, f)
 
     if i % args.print_freq == 0:
       if error_target==False:
@@ -528,14 +529,15 @@ def validate(val_loader, model, criterions, normalizers, tasks, test=False):
       batch_time.update(time.time() - end)
       end = time.time()
       embedding = embedding.cpu().numpy().tolist()
-      for idx_, cid in enumerate(cif_id):
-        embedding_dict[cid] = embedding [idx_]
-      if test== False:
-        file_name = 'embeddings_val.json'
-      else:
-        file_name = 'embeddings_test.json'
-      with open(file_name, 'w') as f:
-        json.dump(embedding_dict, f)
+      if epoch%50==0:
+        for idx_, cid in enumerate(cif_id):
+          embedding_dict[cid] = embedding [idx_]
+        if test== False:
+          file_name = 'embeddings_val.json'
+        else:
+          file_name = 'embeddings_test.json'
+        with open(file_name, 'w') as f:
+          json.dump(embedding_dict, f)
 
       if i % args.print_freq == 0:
         if error_target == False:
