@@ -273,6 +273,7 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks)
         dict_task['fscores'] = AverageMeter()
         dict_task['auc_scores'] = AverageMeter()
     scores[task_id] = dict_task
+    embedding_dict = {}
 
     # switch to train mode
   model.train()
@@ -281,7 +282,7 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks)
   print('start train_loader')
   # for i, (input, targets, _) in enumerate(train_loader):
   #   print(f'index i:{i}')
-  for i, (input, targets, _) in enumerate(train_loader):
+  for i, (input, targets, cif_id) in enumerate(train_loader):
     print(f'index i:{i}')
     # for t_c in targets[2]:
     #   try:
@@ -314,7 +315,7 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks)
 
     # compute output
     error_target = False
-    outputs = model(*input_var)
+    outputs, embedding = model(*input_var)
     losses = 0
     target_task_class = [t[2] for t in targets]
     # if os.path.exists("/content/target.txt"):
@@ -359,6 +360,9 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks)
     # measure elapsed time
     batch_time.update(time.time() - end)
     end = time.time()
+    embedding = embedding.cpu().numpy().tolist()
+    for cid in enumerate(cif_id):
+      
 
     if i % args.print_freq == 0:
       if error_target==False:
