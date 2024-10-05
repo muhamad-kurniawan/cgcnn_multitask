@@ -224,7 +224,7 @@ def main():
         train(train_loader, model, criterions, optimizer, epoch, normalizers, config["tasks"])
 
         # evaluate on validation set
-        mae_error = validate(val_loader, model, criterions, normalizers, tasks=config["tasks"])
+        mae_error = validate(val_loader, model, criterions, normalizers, tasks=config["tasks"], epoch=epoch)
 
         if mae_error != mae_error:
             print('Exit due to NaN')
@@ -252,7 +252,7 @@ def main():
     print('---------Evaluate Model on Test Set---------------')
     best_checkpoint = torch.load('model_best.pth.tar')
     model.load_state_dict(best_checkpoint['state_dict'])
-    validate(test_loader, model, criterions, normalizers, test=True, tasks=config["tasks"])
+    validate(test_loader, model, criterions, normalizers, test=True, tasks=config["tasks"], epoch=epoch)
 
 def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks):
   batch_time = AverageMeter()
@@ -399,7 +399,7 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks)
               )
 
 
-def validate(val_loader, model, criterions, normalizers, tasks, test=False):
+def validate(val_loader, model, criterions, normalizers, tasks, epoch, test=False):
   batch_time = AverageMeter()  
   scores = {}
   for t in range(len(tasks)):
