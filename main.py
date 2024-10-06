@@ -370,7 +370,7 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, config
     batch_time.update(time.time() - end)
     end = time.time()
     embedding = embedding.cpu().numpy().tolist()
-    if epoch%25==0:
+    if epoch%50==0:
       for idx_, cid in enumerate(cif_id):
         embedding_dict[cid] = embedding[idx_]
       with open('embeddings.json', 'w') as f:
@@ -543,7 +543,7 @@ def validate(val_loader, model, criterions, normalizers, config, epoch, test=Fal
       batch_time.update(time.time() - end)
       end = time.time()
       embedding = embedding.cpu().numpy().tolist()
-      if epoch%25==0 or test==True:
+      if epoch%50==0 or test==True:
         for idx_, cid in enumerate(batch_cif_ids):
           embedding_dict[cid] = embedding[idx_]
         if test== False:
