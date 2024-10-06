@@ -221,10 +221,10 @@ def main():
     for epoch in range(args.start_epoch, args.epochs):
         print(f'start epoch {epoch}')
         # train for one epoch
-        train(train_loader, model, criterions, optimizer, epoch, normalizers, config["tasks"])
+        train(train_loader, model, criterions, optimizer, epoch, normalizers, config=config)
 
         # evaluate on validation set
-        mae_error = validate(val_loader, model, criterions, normalizers, tasks=config["tasks"], epoch=epoch)
+        mae_error = validate(val_loader, model, criterions, normalizers, config=config, epoch=epoch)
 
         if mae_error != mae_error:
             print('Exit due to NaN')
@@ -252,9 +252,14 @@ def main():
     print('---------Evaluate Model on Test Set---------------')
     best_checkpoint = torch.load('model_best.pth.tar')
     model.load_state_dict(best_checkpoint['state_dict'])
-    validate(test_loader, model, criterions, normalizers, test=True, tasks=config["tasks"], epoch=epoch)
+    validate(test_loader, model, criterions, normalizers, test=True, config=config, epoch=epoch)
 
-def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks):
+def train(train_loader, model, criterions, optimizer, epoch, normalizers, config):
+  tasks = config['tasks']
+  if 'weights_loss' in config.keys():
+    weights_loss = config['weights_loss']
+  else:
+    weights_loss = [1]*len(config['tasks'])
   batch_time = AverageMeter()
   data_time = AverageMeter()  
   scores = {}
@@ -349,7 +354,7 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks)
             scores[task_id]['recalls'].update(recall, target.size(0))
             scores[task_id]['fscores'].update(fscore, target.size(0))
             scores[task_id]['auc_scores'].update(auc_score, target.size(0))
-      losses += loss
+      losses += loss*weights_loss[idx]
       
     # compute gradient and do SGD step
     optimizer.zero_grad()
@@ -399,7 +404,12 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, tasks)
               )
 
 
-def validate(val_loader, model, criterions, normalizers, tasks, epoch, test=False):
+def validate(val_loader, model, criterions, normalizers, config, epoch, test=False):
+  if 'weights_loss' in config.keys():
+    weights_loss = config['weights_loss']
+  else:
+    weights_loss = [1]*len(config['tasks'])
+  tasks = config['tasks']
   batch_time = AverageMeter()  
   scores = {}
   for t in range(len(tasks)):
