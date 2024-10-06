@@ -52,6 +52,8 @@ parser.add_argument('--resume', default='', type=str, metavar='PATH',
                     help='path to latest checkpoint (default: none)')
 parser.add_argument('--transfer', default='', type=str, metavar='PATH',
                     help='path to latest checkpoint (default: none)')
+parser.add_argument('--config', default='', type=str, metavar='PATH',
+                    help='path to latest checkpoint (default: none)')
 train_group = parser.add_mutually_exclusive_group()
 train_group.add_argument('--train-ratio', default=None, type=float, metavar='N',
                     help='number of training data to be loaded (default none)')
@@ -95,8 +97,10 @@ def main():
     global args, best_mae_error
 
     # load data
-
-    config_file = args.data_options[0] + '/config.json'
+    if args.config:
+      config_file = args.config
+    else:
+      config_file = args.data_options[0] + '/config.json'
     with open(config_file) as f:
         config = json.load(f)
     dataset = CIFData(*args.data_options, config=config)
