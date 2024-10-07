@@ -376,8 +376,12 @@ class CIFData(Dataset):
     def __init__(self, root_dir, config, cache_path='all_data.pkl', max_num_nbr=12, radius=10, dmin=0, step=0.2, random_seed=123):
         self.root_dir = root_dir
         self.config = config
-        self.cache_path = cache_path
         self.max_num_nbr, self.radius = max_num_nbr, radius
+
+        if 'cache_path' in config.keys():
+          self.cache_path = config['cache_path']
+        else:
+          self.cache_path = cache_path
         
         # Load dataset metadata (ID and property data)
         id_prop_file = os.path.join(self.root_dir, 'id_prop.csv')
