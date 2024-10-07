@@ -8,6 +8,7 @@ import random
 import warnings
 import pickle
 from tqdm import tqdm
+import gzip
 
 import numpy as np
 import torch
@@ -394,6 +395,11 @@ class CIFData(Dataset):
         # Try to load from the cache file if it exists
         if os.path.exists(self.cache_path):
             print(f"Loading dataset from cache: {self.cache_path}")
+          if self.cache_path.split('.')[-1]=='gz': 
+            with gzip.open(self.cache_path, 'rb') as f:
+              self.cache = f.read()
+              self.cache = pickle.load(self.cache)
+          else:              
             with open(self.cache_path, 'rb') as f:
                 self.cache = pickle.load(f)
         else:
