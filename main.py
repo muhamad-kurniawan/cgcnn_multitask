@@ -52,7 +52,7 @@ parser.add_argument('--resume', default='', type=str, metavar='PATH',
                     help='path to latest checkpoint (default: none)')
 parser.add_argument('--transfer', default='', type=str, metavar='PATH',
                     help='path to latest checkpoint (default: none)')
-parser.add_argument('--config', default='', type=str, metavar='PATH',
+parser.add_argument('--config-alt', default='', type=str, metavar='PATH',
                     help='path to latest checkpoint (default: none)')
 train_group = parser.add_mutually_exclusive_group()
 train_group.add_argument('--train-ratio', default=None, type=float, metavar='N',
