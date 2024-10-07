@@ -401,8 +401,7 @@ class CIFData(Dataset):
             print(f"Loading dataset from cache: {self.cache_path}")
             if self.cache_path.split('.')[-1]=='gz': 
               with gzip.open(self.cache_path, 'rb') as f:
-                self.cache = f.read()
-                self.cache = pickle.load(self.cache)
+                self.cache = pickle.load(f)
             else:              
               with open(self.cache_path, 'rb') as f:
                 self.cache = pickle.load(f)
