@@ -97,8 +97,8 @@ def main():
     global args, best_mae_error
 
     # load data
-    if args.config:
-      config_file = args.config
+    if args.config_alt:
+      config_file = args.config_alt
     else:
       config_file = args.data_options[0] + '/config.json'
     with open(config_file) as f:
