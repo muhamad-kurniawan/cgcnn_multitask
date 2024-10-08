@@ -227,7 +227,8 @@ def main():
         # train for one epoch
         get_embedding=False
         if epoch%200:
-          get_embedding=True
+          # get_embedding=True
+          pass
         train(train_loader, model, criterions, optimizer, epoch, normalizers, config=config, get_embedding=get_embedding)
 
         # evaluate on validation set
