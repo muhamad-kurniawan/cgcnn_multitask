@@ -73,6 +73,52 @@ class ConvLayer(nn.Module):
         nbr_sumed = self.bn2(nbr_sumed)
         out = self.softplus2(atom_in_fea + nbr_sumed)
         return out
+        
+class ResidualConvModel(nn.Module):
+    def __init__(self, atom_fea_len, nbr_fea_len, n_conv):
+        """
+        Initialize ResidualConvModel.
+
+        Parameters
+        ----------
+        atom_fea_len : int
+            Number of atom hidden features.
+        nbr_fea_len : int
+            Number of bond features.
+        n_conv : int
+            Number of convolutional layers.
+        """
+        super(ResidualConvModel, self).__init__()
+        self.convs = nn.ModuleList([ConvLayer(atom_fea_len=atom_fea_len,
+                                              nbr_fea_len=nbr_fea_len)
+                                    for _ in range(n_conv)])
+
+    def forward(self, atom_fea, nbr_fea, nbr_fea_idx):
+        """
+        Forward pass for the ResidualConvModel.
+
+        Parameters
+        ----------
+        atom_fea : torch.Tensor
+            Atom hidden features before convolution.
+        nbr_fea : torch.Tensor
+            Bond features of each atom's neighbors.
+        nbr_fea_idx : torch.LongTensor
+            Indices of neighbors of each atom.
+
+        Returns
+        -------
+        atom_fea : torch.Tensor
+            Atom hidden features after convolution with residual connections.
+        """
+        for conv_func in self.convs:
+            # Store the input to the conv layer
+            residual = atom_fea
+            # Apply the convolution
+            atom_fea = conv_func(atom_fea, nbr_fea, nbr_fea_idx)
+            # Add the residual (input) to the output
+            atom_fea = atom_fea + residual
+        return atom_fea
 
 
 class CrystalGraphConvNet(nn.Module):
@@ -106,9 +152,10 @@ class CrystalGraphConvNet(nn.Module):
         # self.classification = classification
         self.tasks = tasks
         self.embedding = nn.Linear(orig_atom_fea_len, atom_fea_len)
-        self.convs = nn.ModuleList([ConvLayer(atom_fea_len=atom_fea_len,
-                                    nbr_fea_len=nbr_fea_len)
-                                    for _ in range(n_conv)])
+        # self.convs = nn.ModuleList([ConvLayer(atom_fea_len=atom_fea_len,
+        #                             nbr_fea_len=nbr_fea_len)
+        #                             for _ in range(n_conv)])
+        self.convs = ResidualConvModel(atom_fea_len, nbr_fea_len, n_conv)
         self.conv_to_fc = nn.Linear(atom_fea_len, h_fea_len)
         # self.conv_to_fc_softplus = nn.Softplus()
         # if n_h > 1:
