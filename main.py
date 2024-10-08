@@ -286,7 +286,7 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, config
         dict_task['fscores'] = AverageMeter()
         dict_task['auc_scores'] = AverageMeter()
     scores[task_id] = dict_task
-    embedding_dict = {}
+  embedding_dict = {}
 
     # switch to train mode
   model.train()
