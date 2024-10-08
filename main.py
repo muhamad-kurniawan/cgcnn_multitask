@@ -225,10 +225,12 @@ def main():
     for epoch in range(args.start_epoch, args.epochs):
         print(f'start epoch {epoch}')
         # train for one epoch
-        train(train_loader, model, criterions, optimizer, epoch, normalizers, config=config)
+        if epoch%200:
+          get_embedding=True
+        train(train_loader, model, criterions, optimizer, epoch, normalizers, config=config, get_embedding=get_embedding)
 
         # evaluate on validation set
-        mae_error = validate(val_loader, model, criterions, normalizers, config=config, epoch=epoch)
+        mae_error = validate(val_loader, model, criterions, normalizers, config=config, epoch=epoch, get_embedding=get_embedding)
 
         if mae_error != mae_error:
             print('Exit due to NaN')
@@ -258,7 +260,7 @@ def main():
     model.load_state_dict(best_checkpoint['state_dict'])
     validate(test_loader, model, criterions, normalizers, test=True, config=config, epoch=epoch)
 
-def train(train_loader, model, criterions, optimizer, epoch, normalizers, config):
+def train(train_loader, model, criterions, optimizer, epoch, normalizers, config, get_embedding=False):
   tasks = config['tasks']
   if 'weights_loss' in config.keys():
     weights_loss = config['weights_loss']
@@ -370,7 +372,7 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, config
     batch_time.update(time.time() - end)
     end = time.time()
     embedding = embedding.cpu().numpy().tolist()
-    if epoch%50==0:
+    if get_embedding:
       for idx_, cid in enumerate(cif_id):
         embedding_dict[cid] = embedding[idx_]
       with open('embeddings.json', 'w') as f:
@@ -408,7 +410,7 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, config
               )
 
 
-def validate(val_loader, model, criterions, normalizers, config, epoch, test=False):
+def validate(val_loader, model, criterions, normalizers, config, epoch, test=False, get_embedding=False):
   if 'weights_loss' in config.keys():
     weights_loss = config['weights_loss']
   else:
@@ -543,7 +545,7 @@ def validate(val_loader, model, criterions, normalizers, config, epoch, test=Fal
       batch_time.update(time.time() - end)
       end = time.time()
       embedding = embedding.cpu().numpy().tolist()
-      if epoch%50==0 or test==True:
+      if get_embedding or test==True:
         for idx_, cid in enumerate(batch_cif_ids):
           embedding_dict[cid] = embedding[idx_]
         if test== False:
