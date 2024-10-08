@@ -225,6 +225,7 @@ def main():
     for epoch in range(args.start_epoch, args.epochs):
         print(f'start epoch {epoch}')
         # train for one epoch
+        get_embedding=False
         if epoch%200:
           get_embedding=True
         train(train_loader, model, criterions, optimizer, epoch, normalizers, config=config, get_embedding=get_embedding)
