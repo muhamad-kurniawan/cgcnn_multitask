@@ -377,8 +377,6 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, config
     if get_embedding:
       for idx_, cid in enumerate(cif_id):
         embedding_dict[cid] = embedding[idx_]
-      with open('embeddings.json', 'w') as f:
-        json.dump(embedding_dict, f)
 
     if i % args.print_freq == 0:
       if error_target==False:
@@ -410,7 +408,9 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, config
                   prec=scores[task_id]['precisions'], recall=scores[task_id]['recalls'], f1=scores[task_id]['fscores'],
                   auc=scores[task_id]['auc_scores'])
               )
-
+  if get_embedding:
+    with open('embeddings.json', 'w') as f:
+      json.dump(embedding_dict, f)
 
 def validate(val_loader, model, criterions, normalizers, config, epoch, test=False, get_embedding=False):
   if 'weights_loss' in config.keys():
@@ -550,12 +550,7 @@ def validate(val_loader, model, criterions, normalizers, config, epoch, test=Fal
       if get_embedding or test==True:
         for idx_, cid in enumerate(batch_cif_ids):
           embedding_dict[cid] = embedding[idx_]
-        if test== False:
-          file_name = 'embeddings_val.json'
-        else:
-          file_name = 'embeddings_test.json'
-        with open(file_name, 'w') as f:
-          json.dump(embedding_dict, f)
+
 
       if i % args.print_freq == 0:
         if error_target == False:
@@ -587,7 +582,15 @@ def validate(val_loader, model, criterions, normalizers, config, epoch, test=Fal
                     i, len(val_loader), batch_time=batch_time, loss=scores[task_id]['losses'],
                     accu=scores[task_id]['accuracies'], prec=scores[task_id]['precisions'], recall=scores[task_id]['recalls'],
                     f1=scores[task_id]['fscores'], auc=scores[task_id]['auc_scores']))
-
+              
+  if get_embedding or test==True::
+    if test== False:
+      file_name = 'embeddings_val.json'
+    else:
+      file_name = 'embeddings_test.json'
+    with open(file_name, 'w') as f:
+      json.dump(embedding_dict, f)
+      
   for idx, t in enumerate(tasks):
     task_id = f'task_{idx}'
     if test:
