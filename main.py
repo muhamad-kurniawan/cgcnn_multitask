@@ -583,7 +583,7 @@ def validate(val_loader, model, criterions, normalizers, config, epoch, test=Fal
                     accu=scores[task_id]['accuracies'], prec=scores[task_id]['precisions'], recall=scores[task_id]['recalls'],
                     f1=scores[task_id]['fscores'], auc=scores[task_id]['auc_scores']))
               
-  if get_embedding or test==True::
+  if get_embedding or test==True:
     if test== False:
       file_name = 'embeddings_val.json'
     else:
