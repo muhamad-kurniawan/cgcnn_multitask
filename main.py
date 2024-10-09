@@ -261,7 +261,7 @@ def main():
     # best_checkpoint = torch.load('model_best.pth.tar')
     best_checkpoint = torch.load('checkpoint.pth.tar')
     model.load_state_dict(best_checkpoint['state_dict'])
-    validate(test_loader, model, criterions, normalizers, test=True, config=config, epoch=epoch)
+    validate(test_loader, model, criterions, normalizers, test=True, config=config)
 
 def train(train_loader, model, criterions, optimizer, epoch, normalizers, config, get_embedding=False):
   tasks = config['tasks']
@@ -413,7 +413,7 @@ def train(train_loader, model, criterions, optimizer, epoch, normalizers, config
     with open('embeddings.json', 'w') as f:
       json.dump(embedding_dict, f)
 
-def validate(val_loader, model, criterions, normalizers, config, epoch, test=False, get_embedding=False):
+def validate(val_loader, model, criterions, normalizers, config, epoch=None, test=False, get_embedding=False):
   if 'weights_loss' in config.keys():
     weights_loss = config['weights_loss']
   else:
