@@ -258,7 +258,8 @@ def main():
 
     # test best model
     print('---------Evaluate Model on Test Set---------------')
-    best_checkpoint = torch.load('model_best.pth.tar')
+    # best_checkpoint = torch.load('model_best.pth.tar')
+    best_checkpoint = torch.load('checkpoint.pth.tar')
     model.load_state_dict(best_checkpoint['state_dict'])
     validate(test_loader, model, criterions, normalizers, test=True, config=config, epoch=epoch)
 
