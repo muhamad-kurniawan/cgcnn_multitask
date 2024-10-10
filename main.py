@@ -174,6 +174,11 @@ def main():
     else:
         raise NameError('Only SGD or Adam is allowed as --optim')
 
+    if torch.cuda.is_available():
+      device = torch.device('cuda:0')
+    else:
+      device = torch.device('cpu')
+
     # optionally resume from a checkpoint
     if args.resume:
         if os.path.isfile(args.resume):
@@ -191,7 +196,7 @@ def main():
     if args.transfer:
         if os.path.isfile(args.transfer):
             print("=> loading checkpoint '{}'".format(args.transfer))
-            checkpoint = torch.load(args.transfer)
+            checkpoint = torch.load(args.transfer, map_location=device)
             args.start_epoch = checkpoint['epoch']
             best_mae_error = checkpoint['best_mae_error']
             # model.load_state_dict(checkpoint['state_dict'])
