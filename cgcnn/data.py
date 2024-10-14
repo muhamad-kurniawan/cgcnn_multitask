@@ -373,7 +373,7 @@ class AtomCustomJSONInitializer(AtomInitializer):
 #         return (atom_fea, nbr_fea, nbr_fea_idx), targets, cif_id
 
 class CIFData(Dataset):
-    def __init__(self, root_dir, config, cache_path='all_data.pkl', max_num_nbr=12, radius=10, dmin=0, step=0.2, random_seed=123):
+    def __init__(self, root_dir, config, cache_path='all_data.pkl.gz', max_num_nbr=12, radius=10, dmin=0, step=0.2, random_seed=123):
         self.root_dir = root_dir
         self.config = config
         self.max_num_nbr, self.radius = max_num_nbr, radius
@@ -434,7 +434,7 @@ class CIFData(Dataset):
             self.cache[cif_id] = ((atom_fea, nbr_fea, nbr_fea_idx), targets, cif_id)
 
         # Save the entire dataset to a pickle file for future use
-        with open(self.cache_path, 'wb') as f:
+        with gzip.open(self.cache_path, 'wb') as f:
             pickle.dump(self.cache, f)
         print(f"All CIF files processed and cached at {self.cache_path}")
 
